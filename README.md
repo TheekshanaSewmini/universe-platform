@@ -56,6 +56,8 @@ For inquiries or collaboration, feel free to reach out to the team members:
 
 | Member | GitHub Profile |
 |--------|----------------|
-| Theekshana | https://github.com/TheekshanaSewmini |
-| Damsi | https://github.com/Damsi119 |
-| Danupa | https://github.com/GdanupaThamode |
+| Theekshana | [github.com/TheekshanaSewmini](https://github.com/TheekshanaSewmini) |
+| Damsi | [github.com/Damsi119](https://github.com/Damsi119) |
+| Danupa | [github.com/GdanupaThamode](https://github.com/GdanupaThamode) |
+
+---
