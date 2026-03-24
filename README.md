@@ -10,9 +10,9 @@ A web-based system designed for university students to enhance campus life throu
 
 This system provides:
 
+- 👤 **User Management Module** — for authentication and access control 
 - 🔍 **Lost & Found Module** — for reporting and recovering items 
-- 📚 **Library Seat Availability Module** — for managing study space usage  
-- 👤 **User Management Module** — for authentication and access control  
+- 📚 **Library Seat Availability Module** — for managing study space usage   
 - 🤖 **AI Assistant** — to help users with queries and guidance 
 
 > Developed as part of the SLIIT ITPM coursework.
