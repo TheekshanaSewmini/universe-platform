@@ -21,7 +21,7 @@ This system provides:
 
 ## 🚀 Features
 
-- 👤 **User Management** — secure registration and login with JWT authentication, OTP verification, and role-based access (Student, Admin).
+- 👤 **User Management** — secure registration and login with JWT authentication and email OTP verification during sign-in
 
 - 🔍 **Lost & Found Module** — report and recover items, view all listings, manage personal posts (edit/delete), and use quick search by name or date range
     
