@@ -10,6 +10,6 @@ import java.util.List;
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
     List<Subject> findByCourse(Course course);
     List<Subject> findByOwner(User owner);
-    
+
     List<Subject> findByOwnerAndCourse(User owner, Course course);
 }
