@@ -1,120 +1,115 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../api/axios";
 
-export default function MySubjects() {
-  const [subjects, setSubjects] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ name: "", code: "", description: "", courseId: "" });
+const FORM_INIT = {
+  name: "",
+  code: "",
+  description: "",
+};
+
+const MyCourses = () => {
+  const [list, setList] = useState([]);
+  const [form, setForm] = useState(FORM_INIT);
   const [editingId, setEditingId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    fetchCourses();
+    fetchData();
   }, []);
 
-  const fetchSubjects = useCallback(async () => {
-    try {
-      const res = await api.get("/materials/subjects/my", {
-        params: { courseId: selectedCourseId }
-      });
-      setSubjects(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load subjects");
-    }
-  }, [selectedCourseId]);
-
-  useEffect(() => {
-    if (selectedCourseId) fetchSubjects();
-    else setSubjects([]);
-  }, [selectedCourseId, fetchSubjects]);
-
-  useEffect(() => {
-    setForm(prev => ({ ...prev, courseId: selectedCourseId }));
-  }, [selectedCourseId]);
-
-  const fetchCourses = async () => {
+  const fetchData = async () => {
     try {
       const res = await api.get("/materials/courses/my");
-      setCourses(res.data);
-    } catch (err) {
-      console.error(err);
+      setList(res.data);
+    } catch {
       toast.error("Failed to load courses");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setForm(FORM_INIT);
+    setEditingId(null);
+  };
+
+  const validate = () => {
     const name = form.name.trim();
     const code = form.code.trim();
+    const desc = form.description.trim();
 
-    if (!name) {
-      toast.error("Subject name is required");
-      return;
-    }
-    if (name.length < 3) {
-      toast.error("Subject name must be at least 3 characters");
-      return;
-    }
-    if (form.description.trim().length < 10) {
-      toast.error("Description must be at least 10 characters");
-      return;
-    }
-    if (!form.courseId) {
-      toast.error("Please select a course");
-      return;
-    }
-    if (code && code.length < 3) {
-      toast.error("Subject code must be at least 3 characters");
-      return;
-    }
-    if (code && !/^[A-Z]{2,6}\d{2,4}$/.test(code)) {
-      toast.error("Subject code must contain uppercase letters then digits, e.g. CS101 or PHY202");
-      return;
+    if (!name) return toast.error("Course name is required"), false;
+    if (name.length < 3) return toast.error("Minimum 3 characters"), false;
+    if (desc.length < 10) return toast.error("Description too short"), false;
+
+    if (code) {
+      if (code.length < 3) return toast.error("Invalid code length"), false;
+      if (!/^[A-Z]{2,6}\d{2,4}$/.test(code))
+        return toast.error("Invalid code format"), false;
     }
 
-    setSubmitting(true);
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setBusy(true);
+
     try {
+      let res;
+
       if (editingId) {
-        const res = await api.put(`/materials/subjects/update/${editingId}`, form);
-        toast.success("Subject updated");
-        setSubjects(subjects.map(s => s.id === editingId ? res.data : s));
-        setEditingId(null);
+        res = await api.put(`/materials/courses/update/${editingId}`, form);
+
+        setList((prev) =>
+            prev.map((c) => (c.id === editingId ? res.data : c))
+        );
+
+        toast.success("Course updated");
       } else {
-        const res = await api.post("/materials/subjects/create", form);
-        toast.success("Subject created");
-        setSubjects([res.data, ...subjects]);
+        res = await api.post("/materials/courses/create", form);
+
+        setList((prev) => [res.data, ...prev]);
+
+        toast.success("Course created");
       }
-      setForm({ name: "", code: "", description: "", courseId: selectedCourseId });
+
+      resetForm();
     } catch (err) {
+      console.error(err);
       toast.error(err.response?.data?.message || "Operation failed");
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
-  const handleEdit = (subject) => {
+  const handleEdit = (c) => {
+    setEditingId(c.id);
     setForm({
-      name: subject.name,
-      code: subject.code,
-      description: subject.description,
-      courseId: subject.courseId,
+      name: c.name || "",
+      code: c.code || "",
+      description: c.description || "",
     });
-    setEditingId(subject.id);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this subject? All materials will be removed.")) return;
+    if (!window.confirm("Delete this course? All related data will be removed.")) return;
+
     try {
-      await api.delete(`/materials/subjects/delete/${id}`);
-      toast.success("Subject deleted");
-      setSubjects(subjects.filter(s => s.id !== id));
+      await api.delete(`/materials/courses/delete/${id}`);
+      setList((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Course deleted");
     } catch (err) {
+      console.error(err);
       toast.error(err.response?.data?.message || "Delete failed");
     }
   };
@@ -122,70 +117,67 @@ export default function MySubjects() {
   if (loading) return <div className="loading-spinner">Loading courses...</div>;
 
   return (
-    <div className="manager-card">
-      <h2>My Subjects</h2>
-      <div className="filter">
-        <label>Select Course:</label>
-        <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}>
-          <option value="">-- Choose a course --</option>
-          {courses.map(c => (
-            <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
-          ))}
-        </select>
-      </div>
+      <div className="manager-card">
+        <h2>My Courses</h2>
 
-      {selectedCourseId && (
-        <>
-          <form onSubmit={handleSubmit} className="form-inline">
-            <input
-              type="text"
-              placeholder="Subject name"
+        <form onSubmit={handleSubmit} className="form-inline">
+          <input
+              name="name"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={onChange}
+              placeholder="Course name"
               required
-            />
-            <input
-              type="text"
-              placeholder="Subject code (optional)"
+          />
+
+          <input
+              name="code"
               value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value })}
-            />
-            <textarea
-              placeholder="Description"
+              onChange={onChange}
+              placeholder="Course code (e.g., CS101)"
+          />
+
+          <textarea
+              name="description"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={onChange}
+              placeholder="Description"
               rows="2"
-            />
-            <button type="submit" disabled={submitting}>
-              {editingId ? "Update" : "Create"}
-            </button>
-            {editingId && (
-              <button type="button" onClick={() => {
-                setEditingId(null);
-                setForm({ name: "", code: "", description: "", courseId: selectedCourseId });
-              }}>
+          />
+
+          <button type="submit" disabled={busy}>
+            {editingId ? "Update" : "Create"}
+          </button>
+
+          {editingId && (
+              <button type="button" onClick={resetForm}>
                 Cancel
               </button>
-            )}
-          </form>
+          )}
+        </form>
 
-          <div className="items-grid">
-            {subjects.map(subject => (
-              <div key={subject.id} className="item-card">
+        <div className="items-grid">
+          {list.map((c) => (
+              <div key={c.id} className="item-card">
                 <div className="item-header">
-                  <h3>{subject.name}</h3>
-                  {subject.code && <span className="badge">{subject.code}</span>}
+                  <h3>{c.name}</h3>
+                  <span className="badge">{c.code || "No code"}</span>
                 </div>
-                <p className="description">{subject.description || "No description"}</p>
+
+                <p className="description">
+                  {c.description || "No description"}
+                </p>
+
                 <div className="item-actions">
-                  <button className="edit-btn" onClick={() => handleEdit(subject)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(subject.id)}>Delete</button>
+                  <button onClick={() => handleEdit(c)}>Edit</button>
+                  <button className="delete-btn" onClick={() => handleDelete(c.id)}>
+                    Delete
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+          ))}
+        </div>
+      </div>
   );
-}
+};
+
+export default MyCourses;

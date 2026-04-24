@@ -10,4 +10,5 @@ public interface MaterialVersionRepository extends JpaRepository<MaterialVersion
     List<MaterialVersion> findByMaterialOrderByVersionNumberDesc(Material material);
     MaterialVersion findTopByMaterialOrderByVersionNumberDesc(Material material);
     void deleteByMaterial(Material material);
+
 }

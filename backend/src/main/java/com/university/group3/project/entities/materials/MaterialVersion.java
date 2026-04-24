@@ -23,7 +23,7 @@ public class MaterialVersion {
     @ManyToOne
     @JoinColumn(name = "material_id")
     @JsonIgnore
-    private Material material;
+    private Material  material;
 
     @Column(nullable = false)
     private Integer versionNumber;

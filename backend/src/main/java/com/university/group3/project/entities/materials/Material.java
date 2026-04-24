@@ -21,7 +21,7 @@ public class Material {
     private Long id;
 
     @Column(nullable = false, length = 200)
-    private String title;
+    private String  title;
 
     @Column(length = 2000)
     private String description;

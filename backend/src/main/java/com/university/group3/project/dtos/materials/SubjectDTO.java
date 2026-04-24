@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SubjectDTO {
-    private String name;
+    private String  name;
     private String code;
     private String description;
     private Long courseId;

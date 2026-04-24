@@ -13,7 +13,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -22,42 +21,51 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private  final JWTAuthFilter jwtAuthFilter;
-    private  final AuthenticationProvider authenticationProvider;
+    private final JWTAuthFilter jwtFilter;
+    private final AuthenticationProvider authProvider;
 
-    // Security filter chain
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration crf = new CorsConfiguration();
-                    crf.setAllowedOrigins(List.of("http://localhost:5173"));
-                    crf.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    crf.setAllowedHeaders(List.of("*")); // ✅ Correct
-                    crf.setAllowCredentials(true);
-                    crf.setMaxAge(3600L);
-                    return crf;
-                }))
+                .cors(cors -> cors.configurationSource(request -> buildCorsConfig()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**","/forgotpass/**", "/user/**","/api/**").permitAll()
-                        .requestMatchers("/student/lostfound/**","/librarian/seats/**","/student/booking/**").permitAll()
-                        .requestMatchers("/materials/**").permitAll()
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(
+                                "/auth/**",
+                                "/forgotpass/**",
+                                "/user/**",
+                                "/api/**",
+                                "/student/lostfound/**",
+                                "/librarian/seats/**",
+                                "/student/booking/**",
+                                "/materials/**"
+                        ).permitAll()
+
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasRole("USER")
                         .requestMatchers("/librarian/**").hasRole("LIBRARIAN")
 
-
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .authenticationProvider(authProvider)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    private CorsConfiguration buildCorsConfig() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        return config;
+    }
 }

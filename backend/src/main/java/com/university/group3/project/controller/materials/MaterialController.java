@@ -18,182 +18,201 @@ public class MaterialController {
 
     private final MaterialService materialService;
 
+    // ================= COURSES =================
 
-
-    // COURSES
-
-    // Create a course owned by the authenticated user.
     @PostMapping("/courses/create")
-    public ResponseEntity<?> createCourse(
-            @RequestBody CourseDTO dto,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.createCourse(dto, user));
+    public ResponseEntity<Object> createCourse(
+            @RequestBody CourseDTO courseDTO,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object createdCourse = materialService.createCourse(courseDTO, loggedUser);
+        return ResponseEntity.ok(createdCourse);
     }
 
-    // Update a course; only the owner can update.
-    @PutMapping("/courses/update/{id}")
-    public ResponseEntity<?> updateCourse(
-            @PathVariable Long id,
-            @RequestBody CourseDTO dto,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.updateCourse(id, dto, user));
+    @PutMapping("/courses/update/{courseId}")
+    public ResponseEntity<Object> updateCourse(
+            @PathVariable Long courseId,
+            @RequestBody CourseDTO courseDTO,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object updatedCourse = materialService.updateCourse(courseId, courseDTO, loggedUser);
+        return ResponseEntity.ok(updatedCourse);
     }
 
-    // Delete a course; only the owner can delete.
-    @DeleteMapping("/courses/delete/{id}")
-    public ResponseEntity<?> deleteCourse(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
-        materialService.deleteCourse(id, user);
+    @DeleteMapping("/courses/delete/{courseId}")
+    public ResponseEntity<String> deleteCourse(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        materialService.deleteCourse(courseId, loggedUser);
         return ResponseEntity.ok("Deleted");
     }
 
-    // List all courses.
     @GetMapping("/courses/list")
-    public ResponseEntity<?> getCourses() {
-        return ResponseEntity.ok(materialService.getCourses());
+    public ResponseEntity<Object> getAllCourses() {
+        Object courses = materialService.getCourses();
+        return ResponseEntity.ok(courses);
     }
 
-    // List courses owned by the authenticated user.
     @GetMapping("/courses/my")
-    public ResponseEntity<?> getMyCourses(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getMyCourses(user));
+    public ResponseEntity<Object> getLoggedUserCourses(
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object courses = materialService.getMyCourses(loggedUser);
+        return ResponseEntity.ok(courses);
     }
 
-    // Get a single course by id.
-    @GetMapping("/courses/get/{id}")
-    public ResponseEntity<?> getCourse(@PathVariable Long id) {
-        return ResponseEntity.ok(materialService.getCourse(id));
+    @GetMapping("/courses/get/{courseId}")
+    public ResponseEntity<Object> getCourseById(
+            @PathVariable Long courseId
+    ) {
+        Object course = materialService.getCourse(courseId);
+        return ResponseEntity.ok(course);
     }
 
-    // ---------- SUBJECTS ----------
+    // ================= SUBJECTS =================
 
-    // Create a subject under a course; owned by the authenticated user.
     @PostMapping("/subjects/create")
-    public ResponseEntity<?> createSubject(
-            @RequestBody SubjectDTO dto,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.createSubject(dto, user));
+    public ResponseEntity<Object> createSubject(
+            @RequestBody SubjectDTO subjectDTO,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object createdSubject = materialService.createSubject(subjectDTO, loggedUser);
+        return ResponseEntity.ok(createdSubject);
     }
 
-    // Update a subject; only the owner can update.
-    @PutMapping("/subjects/update/{id}")
-    public ResponseEntity<?> updateSubject(
-            @PathVariable Long id,
-            @RequestBody SubjectDTO dto,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.updateSubject(id, dto, user));
+    @PutMapping("/subjects/update/{subjectId}")
+    public ResponseEntity<Object> updateSubject(
+            @PathVariable Long subjectId,
+            @RequestBody SubjectDTO subjectDTO,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object updatedSubject = materialService.updateSubject(subjectId, subjectDTO, loggedUser);
+        return ResponseEntity.ok(updatedSubject);
     }
 
-    // Delete a subject; only the owner can delete.
-    @DeleteMapping("/subjects/delete/{id}")
-    public ResponseEntity<?> deleteSubject(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
-        materialService.deleteSubject(id, user);
+    @DeleteMapping("/subjects/delete/{subjectId}")
+    public ResponseEntity<String> deleteSubject(
+            @PathVariable Long subjectId,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        materialService.deleteSubject(subjectId, loggedUser);
         return ResponseEntity.ok("Deleted");
     }
 
-    // List subjects; optionally filter by courseId.
     @GetMapping("/subjects/list")
-    public ResponseEntity<?> getSubjects(
-            @RequestParam(required = false) Long courseId) {
-        return ResponseEntity.ok(materialService.getSubjects(courseId));
+    public ResponseEntity<Object> getAllSubjects(
+            @RequestParam(required = false) Long courseId
+    ) {
+        Object subjects = materialService.getSubjects(courseId);
+        return ResponseEntity.ok(subjects);
     }
 
-    // List subjects owned by the authenticated user; optionally filter by courseId.
     @GetMapping("/subjects/my")
-    public ResponseEntity<?> getMySubjects(
+    public ResponseEntity<Object> getLoggedUserSubjects(
             @RequestParam(required = false) Long courseId,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getMySubjects(courseId, user));
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object subjects = materialService.getMySubjects(courseId, loggedUser);
+        return ResponseEntity.ok(subjects);
     }
 
-    // Get a single subject by id.
-    @GetMapping("/subjects/get/{id}")
-    public ResponseEntity<?> getSubject(@PathVariable Long id) {
-        return ResponseEntity.ok(materialService.getSubject(id));
+    @GetMapping("/subjects/get/{subjectId}")
+    public ResponseEntity<Object> getSubjectById(
+            @PathVariable Long subjectId
+    ) {
+        Object subject = materialService.getSubject(subjectId);
+        return ResponseEntity.ok(subject);
     }
 
-    // ---------- MATERIALS ----------
+    // ================= MATERIALS =================
 
-    // Multipart: file + MaterialDTO fields.
-    // Create a material (file upload required); owned by the authenticated user.
     @PostMapping("/mcreate")
-    public ResponseEntity<?> createMaterial(
-            @ModelAttribute MaterialDTO dto,
+    public ResponseEntity<Object> createMaterial(
+            @ModelAttribute MaterialDTO materialDTO,
             @RequestParam MultipartFile file,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.createMaterial(dto, file, user));
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object createdMaterial = materialService.createMaterial(materialDTO, file, loggedUser);
+        return ResponseEntity.ok(createdMaterial);
     }
 
-    // Update a material; only the owner can update.
-    @PutMapping("/mupdate/{id}")
-    public ResponseEntity<?> updateMaterial(
-            @PathVariable Long id,
-            @RequestBody MaterialDTO dto,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.updateMaterial(id, dto, user));
+    @PutMapping("/mupdate/{materialId}")
+    public ResponseEntity<Object> updateMaterial(
+            @PathVariable Long materialId,
+            @RequestBody MaterialDTO materialDTO,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object updatedMaterial = materialService.updateMaterial(materialId, materialDTO, loggedUser);
+        return ResponseEntity.ok(updatedMaterial);
     }
 
-    // Delete a material; only the owner can delete.
-    @DeleteMapping("/mdelete/{id}")
-    public ResponseEntity<?> deleteMaterial(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
-        materialService.deleteMaterial(id, user);
+    @DeleteMapping("/mdelete/{materialId}")
+    public ResponseEntity<String> deleteMaterial(
+            @PathVariable Long materialId,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        materialService.deleteMaterial(materialId, loggedUser);
         return ResponseEntity.ok("Deleted");
     }
 
-    // List materials; optionally filter by subjectId or courseId.
     @GetMapping("/mlist")
-    public ResponseEntity<?> getMaterials(
+    public ResponseEntity<Object> getAllMaterials(
             @RequestParam(required = false) Long subjectId,
             @RequestParam(required = false) Long courseId,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getMaterials(subjectId, courseId, user));
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object materials = materialService.getMaterials(subjectId, courseId, loggedUser);
+        return ResponseEntity.ok(materials);
     }
 
-    // List materials owned by the authenticated user; optionally filter by subjectId or courseId.
     @GetMapping("/mmy")
-    public ResponseEntity<?> getMyMaterials(
+    public ResponseEntity<Object> getLoggedUserMaterials(
             @RequestParam(required = false) Long subjectId,
             @RequestParam(required = false) Long courseId,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getMyMaterials(subjectId, courseId, user));
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object materials = materialService.getMyMaterials(subjectId, courseId, loggedUser);
+        return ResponseEntity.ok(materials);
     }
 
-    // Get a single material by id.
-    @GetMapping("/mget/{id}")
-    public ResponseEntity<?> getMaterial(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getMaterial(id, user));
+    @GetMapping("/mget/{materialId}")
+    public ResponseEntity<Object> getMaterialById(
+            @PathVariable Long materialId,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object material = materialService.getMaterial(materialId, loggedUser);
+        return ResponseEntity.ok(material);
     }
 
-    // Multipart: upload a new file version for this material.
-    @PostMapping("/mversions/add/{id}")
-    public ResponseEntity<?> addVersion(
-            @PathVariable Long id,
+    // ================= MATERIAL VERSIONS =================
+
+    @PostMapping("/mversions/add/{materialId}")
+    public ResponseEntity<Object> addMaterialVersion(
+            @PathVariable Long materialId,
             @RequestParam MultipartFile file,
             @RequestParam(required = false) String notes,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.addVersion(id, notes, file, user));
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object version = materialService.addVersion(materialId, notes, file, loggedUser);
+        return ResponseEntity.ok(version);
     }
 
-    // List all versions for a material.
-    @GetMapping("/mversions/list/{id}")
-    public ResponseEntity<?> getVersions(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getVersions(id, user));
+    @GetMapping("/mversions/list/{materialId}")
+    public ResponseEntity<Object> getMaterialVersions(
+            @PathVariable Long materialId,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object versions = materialService.getVersions(materialId, loggedUser);
+        return ResponseEntity.ok(versions);
     }
 
-    // Get the latest version for a material.
-    @GetMapping("/mversions/latest/{id}")
-    public ResponseEntity<?> getLatestVersion(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(materialService.getLatestVersion(id, user));
+    @GetMapping("/mversions/latest/{materialId}")
+    public ResponseEntity<Object> getLatestMaterialVersion(
+            @PathVariable Long materialId,
+            @AuthenticationPrincipal User loggedUser
+    ) {
+        Object latestVersion = materialService.getLatestVersion(materialId, loggedUser);
+        return ResponseEntity.ok(latestVersion);
     }
 }

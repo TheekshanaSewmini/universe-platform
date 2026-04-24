@@ -2,69 +2,57 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../api/axios";
 
-export default function AllSubjects() {
-  const [subjects, setSubjects] = useState([]);
+export default function AllCourses() {
   const [courses, setCourses] = useState([]);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
-    fetchCourses();
+    loadAllCourses();
   }, []);
 
-  useEffect(() => {
-    if (selectedCourseId) fetchSubjects();
-    else setSubjects([]);
-  }, [selectedCourseId]);
-
-  const fetchCourses = async () => {
+  const loadAllCourses = async () => {
     try {
-      const res = await api.get("/materials/courses/list");
-      setCourses(res.data);
-    } catch (err) {
+      const response = await api.get("/materials/courses/list");
+      setCourses(response.data);
+    } catch (error) {
       toast.error("Failed to load courses");
     } finally {
-      setLoading(false);
+      setIsFetching(false);
     }
   };
 
-  const fetchSubjects = async () => {
-    try {
-      const res = await api.get(`/materials/subjects/list?courseId=${selectedCourseId}`);
-      setSubjects(res.data);
-    } catch (err) {
-      toast.error("Failed to load subjects");
-    }
-  };
+  const hasCourses = courses.length > 0;
 
-  if (loading) return <div className="loading-spinner">Loading courses...</div>;
+  if (isFetching) {
+    return <div className="loading-spinner">Loading courses...</div>;
+  }
 
   return (
-    <div className="manager-card">
-      <h2>Subjects</h2>
-      <div className="filter">
-        <label>Select Course:</label>
-        <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}>
-          <option value="">-- Choose a course --</option>
-          {courses.map(c => (
-            <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
-          ))}
-        </select>
-      </div>
+      <div className="manager-card">
+        <h2>All Courses</h2>
 
-      {selectedCourseId && (
         <div className="items-grid">
-          {subjects.map(subject => (
-            <div key={subject.id} className="item-card">
-              <div className="item-header">
-                <h3>{subject.name}</h3>
-                {subject.code && <span className="badge">{subject.code}</span>}
-              </div>
-              <p className="description">{subject.description || "No description"}</p>
-            </div>
-          ))}
+          {!hasCourses ? (
+              <p>No courses available</p>
+          ) : (
+              courses.map((course) => {
+                const { id, name, code, description } = course;
+
+                return (
+                    <div key={id} className="item-card">
+                      <div className="item-header">
+                        <h3>{name}</h3>
+                        <span className="badge">{code || "No code"}</span>
+                      </div>
+
+                      <p className="description">
+                        {description || "No description"}
+                      </p>
+                    </div>
+                );
+              })
+          )}
         </div>
-      )}
-    </div>
+      </div>
   );
 }
