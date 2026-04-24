@@ -6,10 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -18,30 +15,43 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ForgotPasswordController {
 
-    private final ForgotPasswordService forgotPasswordService;
+    private final ForgotPasswordService service;
+
+    // ================= OTP =================
 
     @PostMapping("/send-otp")
-    public ResponseEntity<String> sendOtp(@RequestBody Map<String, String> request, HttpServletResponse response) {
-        return forgotPasswordService.sendOtp(request, response);
+    public ResponseEntity<String> sendOtp(
+            @RequestBody Map<String, String> body,
+            HttpServletResponse response
+    ) {
+        return service.sendOtp(body, response);
     }
 
     @PostMapping("/resend-otp")
-    public ResponseEntity<String> resendOtp(HttpServletRequest request, HttpServletResponse response) {
-        return forgotPasswordService.resendOtp(request, response);
+    public ResponseEntity<String> resendOtp(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        return service.resendOtp(request, response);
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<String> verifyOtp(@RequestBody Map<String, String> request,
-                                            HttpServletRequest httpRequest,
-                                            HttpServletResponse response) {
-        return forgotPasswordService.verifyOtp(request, httpRequest, response);
+    public ResponseEntity<String> verifyOtp(
+            @RequestBody Map<String, String> body,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        return service.verifyOtp(body, request, response);
     }
+
+    // ================= PASSWORD =================
 
     @PostMapping("/change-password")
-    public ResponseEntity<String> changePassword(HttpServletRequest request,
-                                                 HttpServletResponse response,
-                                                 @RequestBody UserDto.ChangePassword dto) {
-        return forgotPasswordService.changePassword(request, response, dto);
+    public ResponseEntity<String> changePassword(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @RequestBody UserDto.ChangePassword dto
+    ) {
+        return service.changePassword(request, response, dto);
     }
 }
-
