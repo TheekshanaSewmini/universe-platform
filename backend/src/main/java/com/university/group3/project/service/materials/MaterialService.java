@@ -14,28 +14,52 @@ import java.util.List;
 
 public interface MaterialService {
 
-    Course createCourse(CourseDTO dto, User user);
-    Course updateCourse(Long id, CourseDTO dto, User user);
-    void deleteCourse(Long id, User user);
+    // Course
+    Course createCourse(CourseDTO courseDTO, User loggedUser);
+
+    Course updateCourse(Long courseId, CourseDTO courseDTO, User loggedUser);
+
+    void deleteCourse(Long courseId, User loggedUser);
+
+    Course getCourse(Long courseId);
+
     List<Course> getCourses();
-    Course getCourse(Long id);
-    List<Course> getMyCourses(User user);
 
-    Subject createSubject(SubjectDTO dto, User user);
-    Subject updateSubject(Long id, SubjectDTO dto, User user);
-    void deleteSubject(Long id, User user);
+    List<Course> getMyCourses(User loggedUser);
+
+
+    // Subject
+    Subject createSubject(SubjectDTO subjectDTO, User loggedUser);
+
+    Subject updateSubject(Long subjectId, SubjectDTO subjectDTO, User loggedUser);
+
+    void deleteSubject(Long subjectId, User loggedUser);
+
+    Subject getSubject(Long subjectId);
+
     List<Subject> getSubjects(Long courseId);
-    Subject getSubject(Long id);
-    List<Subject> getMySubjects(Long courseId, User user);
 
-    Material createMaterial(MaterialDTO dto, MultipartFile file, User user);
-    Material updateMaterial(Long id, MaterialDTO dto, User user);
-    void deleteMaterial(Long id, User user);
-    Material getMaterial(Long id, User user);
-    List<Material> getMaterials(Long subjectId, Long courseId, User user);
-    List<Material> getMyMaterials(Long subjectId, Long courseId, User user);
+    List<Subject> getMySubjects(Long courseId, User loggedUser);
 
-    MaterialVersion addVersion(Long materialId, String notes, MultipartFile file, User user);
-    List<MaterialVersion> getVersions(Long materialId, User user);
-    MaterialVersion getLatestVersion(Long materialId, User user);
+
+    // Material
+    Material createMaterial(MaterialDTO materialDTO, MultipartFile file, User loggedUser);
+
+    Material updateMaterial(Long materialId, MaterialDTO materialDTO, User loggedUser);
+
+    void deleteMaterial(Long materialId, User loggedUser);
+
+    Material getMaterial(Long materialId, User loggedUser);
+
+    List<Material> getMaterials(Long subjectId, Long courseId, User loggedUser);
+
+    List<Material> getMyMaterials(Long subjectId, Long courseId, User loggedUser);
+
+
+    // Material Version
+    MaterialVersion addVersion(Long materialId, String notes, MultipartFile file, User loggedUser);
+
+    List<MaterialVersion> getVersions(Long materialId, User loggedUser);
+
+    MaterialVersion getLatestVersion(Long materialId, User loggedUser);
 }
