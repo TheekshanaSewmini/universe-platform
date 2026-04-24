@@ -46,7 +46,7 @@ export default function LostItemDetail() {
         });
         setImagePreview(toAbsolute(res.data.imageUrl));
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load item");
+        setError(err.response?.data?.message || "Failed  to load item");
         toast.error("Could not load item details");
       } finally {
         setLoading(false);
