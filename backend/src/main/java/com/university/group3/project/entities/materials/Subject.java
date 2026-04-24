@@ -26,7 +26,7 @@ public class Subject {
     private String code;
 
     @Column(length = 1000)
-    private String description;
+    private String  description;
 
     @ManyToOne
     @JoinColumn(name = "course_id")
