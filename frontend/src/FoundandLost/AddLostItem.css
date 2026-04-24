@@ -15,7 +15,7 @@
   --transition: all 0.2s ease;
 }
 
-.add-lost-page {
+.add-lost-page  {
   min-height: 100vh;
   background: var(--bg);
   padding: 2rem;

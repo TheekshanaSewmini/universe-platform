@@ -22,7 +22,7 @@ export default function MyFoundItems() {
         const res = await api.get("/lostfound/found/me");
         setItems(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load items");
+        setError(err.response?.data?.message || "Failed  to load items");
         toast.error("Could not load your found items");
       } finally {
         setLoading(false);

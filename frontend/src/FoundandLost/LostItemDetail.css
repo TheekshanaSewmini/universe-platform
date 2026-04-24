@@ -28,7 +28,7 @@
 }
 
 body {
-  background: radial-gradient(circle at 10% 30%, #fff8ec, #fef3e6);
+  background:  radial-gradient(circle at 10% 30%, #fff8ec, #fef3e6);
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-dark);
   line-height: 1.5;

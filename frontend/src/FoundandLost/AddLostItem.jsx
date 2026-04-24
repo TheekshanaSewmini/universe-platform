@@ -58,7 +58,7 @@ export default function AddLostItem() {
       return;
     }
     if (!form.semester) {
-      toast.error("Please select semester");
+      toast.error("Please select  semester");
       return;
     }
     if (form.contactPhone && !/^\+?[0-9]{7,15}$/.test(form.contactPhone.trim())) {

@@ -60,7 +60,7 @@ export default function AddFoundItem() {
       !form.year ||
       !form.semester
     ) {
-      toast.error("Please fill all required fields");
+      toast.error("Please fill all  required fields");
       return;
     }
     if (form.itemName.trim().length < 3) {
