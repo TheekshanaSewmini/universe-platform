@@ -1,150 +1,305 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import api from "../api/axios";
-import "./AllFoundItems.css";
-import Navbar from "../components/Navbar";
 
-export default function AllFoundItems() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+import api from "../api/axios";
+import Navbar from "../components/Navbar";
+import "./FoundItemDetails.css";
+
+const EMPTY_FORM = {
+  itemName: "",
+  description: "",
+  foundPlace: "",
+  publisherName: "",
+  contactPhone: "",
+  year: "",
+  semester: "",
+};
+
+export default function FoundItemDetail() {
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const backendBaseUrl = api.defaults.baseURL || "";
-  const toAbsolute = (url) =>
-    url ? (url.startsWith("http") ? url : backendBaseUrl + url) : null;
+  const [foundItem, setFoundItem] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const baseUrl = api.defaults.baseURL || "";
 
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const res = await api.get("/lostfound/found");
-        setItems(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed  to load items");
-        toast.error("Could not load found items");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
+    loadFoundItem();
+  }, [id]);
 
-  const handleViewDetails = async (id) => {
+  const makeImageUrl = (url) => {
+    if (!url) return null;
+    return url.startsWith("http") ? url : `${baseUrl}${url}`;
+  };
+
+  const loadFoundItem = async () => {
     try {
-      const res = await api.get(`/lostfound/found/${id}`);
-      setSelectedItem(res.data);
-      setShowModal(true);
+      const { data } = await api.get(`/lostfound/found/${id}`);
+
+      setFoundItem(data);
+      setForm({
+        itemName: data.itemName || "",
+        description: data.description || "",
+        foundPlace: data.foundPlace || "",
+        publisherName: data.publisherName || "",
+        contactPhone: data.contactPhone || "",
+        year: data.year || "",
+        semester: data.semester || "",
+      });
+      setPreview(makeImageUrl(data.imageUrl));
     } catch (err) {
-      toast.error("Failed to load item details");
+      setError(err.response?.data?.message || "Failed to load item");
+      toast.error("Could not load item details");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedItem(null);
+  const changeFormValue = ({ target }) => {
+    setForm((oldForm) => ({
+      ...oldForm,
+      [target.name]: target.value,
+    }));
   };
 
-  const filteredItems = items.filter(item => {
-    const name = item.itemName?.toLowerCase() || "";
-    const place = item.foundPlace?.toLowerCase() || "";
-    const search = searchTerm.toLowerCase();
-    return name.includes(search) || place.includes(search);
-  });
+  const changeImage = (event) => {
+    const selectedFile = event.target.files[0];
+
+    setFile(selectedFile);
+
+    if (!selectedFile) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result);
+    reader.readAsDataURL(selectedFile);
+  };
+
+  const buildFormData = () => {
+    const data = new FormData();
+
+    data.append("itemName", form.itemName);
+    data.append("description", form.description);
+    data.append("foundPlace", form.foundPlace);
+    data.append("publisherName", form.publisherName);
+    data.append("contactPhone", form.contactPhone);
+    data.append("year", form.year);
+    data.append("semester", form.semester);
+
+    if (file) {
+      data.append("image", file);
+    }
+
+    return data;
+  };
+
+  const updateItem = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+
+    try {
+      const { data } = await api.put(`/lostfound/found/${id}`, buildFormData(), {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setFoundItem(data);
+      setEditing(false);
+      setFile(null);
+      setPreview(makeImageUrl(data.imageUrl));
+
+      toast.success("Item updated successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Update failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteItem = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this item?");
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/lostfound/found/${id}`);
+      toast.success("Item deleted successfully!");
+      navigate("/my-found");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Delete failed");
+    }
+  };
+
+  if (loading) return <div className="loading-spinner">Loading...</div>;
+  if (error) return <div className="error-message">{error}</div>;
+  if (!foundItem) return null;
 
   return (
-    <div className="all-found-page">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Navbar />
-      <div className="container">
-        <div className="page-header">
-          <h1>All Found Items</h1>
-          <p>Browse items reported as found</p>
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search by item name or place..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="search-icon">🔍</span>
+      <div className="found-item-detail-page">
+        <ToastContainer position="top-right" autoClose={3000} />
+        <Navbar />
+
+        <div className="container">
+          <div className="page-header">
+            <button className="back-btn" onClick={() => navigate("/my-found")}>
+              ← Back to My Found Items
+            </button>
+
+            <h1>Item Details</h1>
+            <p>View and manage your found item</p>
           </div>
-          <div className="action-buttons">
-            <button className="my-found-btn" onClick={() => navigate("/my-found")}>
-              📋 My Found Items
-            </button>
-            <button className="add-found-btn" onClick={() => navigate("/add-found")}>
-              + Report Found Item
-            </button>
+
+          <div className="detail-card">
+            {!editing ? (
+                <>
+                  <div className="detail-image">
+                    {preview ? (
+                        <img src={preview} alt={foundItem.itemName} />
+                    ) : (
+                        <div className="no-image">📷</div>
+                    )}
+                  </div>
+
+                  <div className="detail-info">
+                    <h2>{foundItem.itemName}</h2>
+                    <p className="location">📍 {foundItem.foundPlace}</p>
+                    <p className="publisher">👤 {foundItem.publisherName}</p>
+                    <p className="contact">
+                      📞 {foundItem.contactPhone || "Not provided"}
+                    </p>
+                    <p className="semester">
+                      📅 {foundItem.year} – {foundItem.semester}
+                    </p>
+                    <p className="description">{foundItem.description}</p>
+                  </div>
+
+                  <div className="detail-actions">
+                    <button className="edit-btn" onClick={() => setEditing(true)}>
+                      Edit
+                    </button>
+
+                    <button className="delete-btn" onClick={deleteItem}>
+                      Delete
+                    </button>
+                  </div>
+                </>
+            ) : (
+                <form onSubmit={updateItem} className="edit-form">
+                  <div className="form-group">
+                    <label>Item Name</label>
+                    <input
+                        name="itemName"
+                        type="text"
+                        value={form.itemName}
+                        onChange={changeFormValue}
+                        required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea
+                        name="description"
+                        rows="4"
+                        value={form.description}
+                        onChange={changeFormValue}
+                        required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Found Place</label>
+                    <input
+                        name="foundPlace"
+                        type="text"
+                        value={form.foundPlace}
+                        onChange={changeFormValue}
+                        required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Your Name</label>
+                    <input
+                        name="publisherName"
+                        type="text"
+                        value={form.publisherName}
+                        onChange={changeFormValue}
+                        required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Contact Phone</label>
+                    <input
+                        name="contactPhone"
+                        type="tel"
+                        value={form.contactPhone}
+                        onChange={changeFormValue}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Year</label>
+                    <select
+                        name="year"
+                        value={form.year}
+                        onChange={changeFormValue}
+                        required
+                    >
+                      <option value="">Select Year</option>
+                      <option value="FIRST">First Year</option>
+                      <option value="SECOND">Second Year</option>
+                      <option value="THIRD">Third Year</option>
+                      <option value="FOURTH">Fourth Year</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Semester</label>
+                    <select
+                        name="semester"
+                        value={form.semester}
+                        onChange={changeFormValue}
+                        required
+                    >
+                      <option value="">Select Semester</option>
+                      <option value="SEM1">Semester 1</option>
+                      <option value="SEM2">Semester 2</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Image</label>
+                    <input type="file" accept="image/*" onChange={changeImage} />
+
+                    {preview && (
+                        <div className="image-preview">
+                          <img src={preview} alt="Preview" />
+                        </div>
+                    )}
+                  </div>
+
+                  <div className="form-actions">
+                    <button type="submit" disabled={saving}>
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+
+                    <button type="button" onClick={() => setEditing(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+            )}
           </div>
         </div>
-
-        {loading ? (
-          <div className="loading-spinner">Loading items...</div>
-        ) : error ? (
-          <div className="error-message">{error}</div>
-        ) : filteredItems.length === 0 ? (
-          <div className="no-items">
-            <p>No found items yet.</p>
-            <button className="add-btn" onClick={() => navigate("/add-found")}>
-              Report a Found Item
-            </button>
-          </div>
-        ) : (
-          <div className="items-grid">
-            {filteredItems.map(item => (
-              <div key={item.id} className="item-card">
-                <div className="item-image">
-                  {item.imageUrl ? (
-                    <img src={toAbsolute(item.imageUrl)} alt={item.itemName} />
-                  ) : (
-                    <div className="no-image">📷</div>
-                  )}
-                </div>
-                <div className="item-info">
-                  <h3>{item.itemName}</h3>
-                  <p className="location">📍 {item.foundPlace}</p>
-                  <p className="publisher">👤 {item.publisherName}</p>
-                  <p className="description">{item.description?.slice(0, 80)}...</p>
-                  <button className="view-btn" onClick={() => handleViewDetails(item.id)}>
-                    View Details
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-
- 
-      {showModal && selectedItem && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal}>×</button>
-            <div className="modal-image">
-              {selectedItem.imageUrl ? (
-                <img src={toAbsolute(selectedItem.imageUrl)} alt={selectedItem.itemName} />
-              ) : (
-                <div className="no-image">📷</div>
-              )}
-            </div>
-            <div className="modal-info">
-              <h2>{selectedItem.itemName}</h2>
-              <p className="location">📍 {selectedItem.foundPlace}</p>
-              <p className="publisher">👤 {selectedItem.publisherName}</p>
-              <p className="contact">📞 {selectedItem.contactPhone || "Not provided"}</p>
-              <p className="semester">
-                📅 {selectedItem.year} – {selectedItem.semester}
-              </p>
-              <p className="description">{selectedItem.description}</p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
