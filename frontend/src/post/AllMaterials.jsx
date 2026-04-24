@@ -1,52 +1,53 @@
-import { useState } from "react";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import "./MaterialsManagement.css";
-import Navbar from "../components/Navbar";
-import AllCourses from "./AllCourses";
-import AllSubjects from "./AllSubjects";
-import AllMaterialsList from "./AllMaterialsList";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import api from "../api/axios";
 
-export default function AllMaterials() {
-  const [activeTab, setActiveTab] = useState("courses");
+export default function AllCourses() {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCourses();
+  }, []);
+
+  const getCourses = async () => {
+    try {
+      const { data } = await api.get("/materials/courses/list");
+      setCourses(data);
+    } catch (e) {
+      toast.error("Failed to load courses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderCourses = () => {
+    if (courses.length === 0) {
+      return <p>No courses available</p>;
+    }
+
+    return courses.map(({ id, name, code, description }) => (
+        <div key={id} className="item-card">
+          <div className="item-header">
+            <h3>{name}</h3>
+            <span className="badge">{code || "No code"}</span>
+          </div>
+
+          <p className="description">
+            {description || "No description"}
+          </p>
+        </div>
+    ));
+  };
+
+  if (loading) {
+    return <div className="loading-spinner">Loading courses...</div>;
+  }
 
   return (
-    <div className="materials-page">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Navbar />
-      <div className="container">
-        <div className="page-header">
-          <h1>📚 All Materials</h1>
-          <p>Browse courses, subjects, and learning materials</p>
-        </div>
-
-        <div className="tabs">
-          <button
-            className={activeTab === "courses" ? "active" : ""}
-            onClick={() => setActiveTab("courses")}
-          >
-            📖 Courses
-          </button>
-          <button
-            className={activeTab === "subjects" ? "active" : ""}
-            onClick={() => setActiveTab("subjects")}
-          >
-            📚 Subjects
-          </button>
-          <button
-            className={activeTab === "materials" ? "active" : ""}
-            onClick={() => setActiveTab("materials")}
-          >
-            📄 Materials
-          </button>
-        </div>
-
-        <div className="tab-content">
-          {activeTab === "courses" && <AllCourses />}
-          {activeTab === "subjects" && <AllSubjects />}
-          {activeTab === "materials" && <AllMaterialsList />}
-        </div>
+      <div className="manager-card">
+        <h2>All Courses</h2>
+        <div className="items-grid">{renderCourses()}</div>
       </div>
-    </div>
   );
 }
