@@ -19,7 +19,7 @@ export default function SuggestItem() {
       return;
     }
     if (value.length < 2) {
-      toast.error("Search term must be at least 2 characters");
+      toast.error("Search term must be  at least 2 characters");
       return;
     }
     setLoading(true);
