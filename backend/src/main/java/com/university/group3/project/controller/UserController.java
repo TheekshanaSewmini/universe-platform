@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 @RestController
 @RequestMapping("/user")
@@ -26,115 +24,127 @@ import java.util.List;
 public class UserController {
 
     private final AuthService authService;
-    private final UserProfileService userProfileService;
-    private final UserRepo userRepo;
+    private final UserProfileService profileService;
+    private final UserRepo userRepository;
+
+    private String saveFile(MultipartFile file, String prefix, Long userId) throws IOException {
+        String fileName = prefix + "_" + userId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+
+        Path path = Paths.get("uploads/" + fileName);
+        Files.createDirectories(path.getParent());
+        Files.write(path, file.getBytes());
+
+        return "/uploads/" + fileName;
+    }
+
+    // ================= PROFILE =================
 
     @PutMapping("/update-name")
     public ResponseEntity<String> updateName(
-            @AuthenticationPrincipal User loggedUser,
-            @Valid @RequestBody UserDto.UpdateNameDto dto) {
-
-        userProfileService.updateName(loggedUser, dto);
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody UserDto.UpdateNameDto dto
+    ) {
+        profileService.updateName(user, dto);
         return ResponseEntity.ok("Name updated successfully");
     }
 
     @PutMapping("/update-email")
     public ResponseEntity<String> updateEmail(
-            @AuthenticationPrincipal User loggedUser,
-            @Valid @RequestBody UserDto.UpdateEmailDto dto) {
-
-        userProfileService.updateEmail(loggedUser, dto);
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody UserDto.UpdateEmailDto dto
+    ) {
+        profileService.updateEmail(user, dto);
         return ResponseEntity.ok("OTP sent to new email for verification");
     }
 
     @PostMapping("/verify-new-email")
-    public ResponseEntity<String> verifyNewEmail(
-            @AuthenticationPrincipal User loggedUser,
-            @RequestParam String otp) {
-
-        userProfileService.verifyNewEmail(loggedUser, otp);
+    public ResponseEntity<String> verifyEmail(
+            @AuthenticationPrincipal User user,
+            @RequestParam String otp
+    ) {
+        profileService.verifyNewEmail(user, otp);
         return ResponseEntity.ok("Email updated successfully");
     }
 
     @PutMapping("/update-password")
     public ResponseEntity<String> updatePassword(
-            @AuthenticationPrincipal User loggedUser,
-            @Valid @RequestBody UserDto.UpdatePasswordDto dto) {
-
-        userProfileService.updatePassword(loggedUser, dto);
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody UserDto.UpdatePasswordDto dto
+    ) {
+        profileService.updatePassword(user, dto);
         return ResponseEntity.ok("Password updated successfully");
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserDto.UserProfileDto> getProfile(
-            @AuthenticationPrincipal User loggedUser) {
-
-        return ResponseEntity.ok(
-                userProfileService.getProfile(loggedUser.getUserId())
-        );
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(profileService.getProfile(user.getUserId()));
     }
+
+    // ================= HOME =================
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/home")
     public ResponseEntity<UserDto.UserHomeDto> getHome(
-            @AuthenticationPrincipal User loggedUser) {
-
-        return ResponseEntity.ok(userProfileService.getUserHome(loggedUser.getUserId()));
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(profileService.getUserHome(user.getUserId()));
     }
+
+    // ================= ACCOUNT =================
 
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteAccount(
-            @AuthenticationPrincipal User loggedUser,
-            @Valid @RequestBody UserDto.DeleteAccountDto dto) {
-
-        userProfileService.deleteAccount(loggedUser, dto);
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody UserDto.DeleteAccountDto dto
+    ) {
+        profileService.deleteAccount(user, dto);
         return ResponseEntity.ok("Account deleted successfully");
     }
 
     @PostMapping("/delete-forgot-request")
-    public ResponseEntity<String> deleteForgotRequest(
-            @AuthenticationPrincipal User loggedUser) {
-
-        userProfileService.requestDeletion(loggedUser);
+    public ResponseEntity<String> requestDelete(
+            @AuthenticationPrincipal User user
+    ) {
+        profileService.requestDeletion(user);
         return ResponseEntity.ok("OTP sent to your registered email. Verify to delete your account.");
     }
 
     @PostMapping("/delete-forgot-verify")
-    public ResponseEntity<String> deleteForgotVerify(
-            @AuthenticationPrincipal User loggedUser,
-            @Valid @RequestBody UserDto.DeleteAccountForgotVerifyDto dto) {
-
-        userProfileService.verifyAndDelete(loggedUser, dto);
+    public ResponseEntity<String> verifyDelete(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody UserDto.DeleteAccountForgotVerifyDto dto
+    ) {
+        profileService.verifyAndDelete(user, dto);
         return ResponseEntity.ok("Account deleted successfully.");
     }
+
+    // ================= FILE UPLOAD =================
 
     @PostMapping("/upload-profile-image")
     public ResponseEntity<String> uploadProfileImage(
             @AuthenticationPrincipal User user,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam MultipartFile file
+    ) throws IOException {
 
-        String filename = "profile_" + user.getUserId() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path uploadPath = Paths.get("uploads/" + filename);
-        Files.createDirectories(uploadPath.getParent());
-        Files.write(uploadPath, file.getBytes());
+        String url = saveFile(file, "profile", user.getUserId());
+        user.setImageUrl(url);
+        userRepository.save(user);
 
-        user.setImageUrl("/uploads/" + filename);
-        userRepo.save(user);
-        return ResponseEntity.ok(user.getImageUrl());
+        return ResponseEntity.ok(url);
     }
 
     @PostMapping("/upload-cover-image")
     public ResponseEntity<String> uploadCoverImage(
             @AuthenticationPrincipal User user,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam MultipartFile file
+    ) throws IOException {
 
-        String filename = "cover_" + user.getUserId() + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path uploadPath = Paths.get("uploads/" + filename);
-        Files.createDirectories(uploadPath.getParent());
-        Files.write(uploadPath, file.getBytes());
+        String url = saveFile(file, "cover", user.getUserId());
+        user.setCoverImageUrl(url);
+        userRepository.save(user);
 
-        user.setCoverImageUrl("/uploads/" + filename);
-        userRepo.save(user);
-        return ResponseEntity.ok(user.getCoverImageUrl());
+        return ResponseEntity.ok(url);
     }
 }
