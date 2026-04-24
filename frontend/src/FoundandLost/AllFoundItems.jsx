@@ -25,7 +25,7 @@ export default function AllFoundItems() {
         const res = await api.get("/lostfound/found");
         setItems(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load items");
+        setError(err.response?.data?.message || "Failed  to load items");
         toast.error("Could not load found items");
       } finally {
         setLoading(false);
