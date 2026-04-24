@@ -14,7 +14,7 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.12);
-  --transition: all 0.2s ease;
+  --transition: all 0.2s  ease;
   --radius: 20px;
   --radius-sm: 12px;
 }
