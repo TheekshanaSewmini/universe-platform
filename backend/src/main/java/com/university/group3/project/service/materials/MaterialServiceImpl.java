@@ -27,340 +27,402 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MaterialServiceImpl implements MaterialService {
 
-    private final CourseRepository courseRepo;
-    private final SubjectRepository subjectRepo;
-    private final MaterialRepository materialRepo;
-    private final MaterialVersionRepository versionRepo;
+    private static final String UPLOAD_FOLDER = "uploads/materials/";
+    private static final String FILE_ACCESS_PATH = "/uploads/materials/";
 
-    private static final String MATERIAL_UPLOAD_DIR = "uploads/materials/";
+    private final CourseRepository courseRepository;
+    private final SubjectRepository subjectRepository;
+    private final MaterialRepository materialRepository;
+    private final MaterialVersionRepository materialVersionRepository;
 
-    private void requireAuthenticated(User user) {
+    private void checkLogin(User user) {
         if (user == null) {
             throw new RuntimeException("Unauthorized");
         }
     }
 
-    private void ensureOwner(User owner, User user, Runnable assignOwner) {
-        requireAuthenticated(user);
+    private void checkOwnership(User owner, User loggedUser, Runnable setOwnerAction) {
+        checkLogin(loggedUser);
+
         if (owner == null) {
-            assignOwner.run();
+            setOwnerAction.run();
             return;
         }
-        if (!owner.getUserId().equals(user.getUserId())) {
+
+        if (!owner.getUserId().equals(loggedUser.getUserId())) {
             throw new RuntimeException("Access denied");
         }
     }
 
-    private void ensureOwner(Material material, User user) {
-        ensureOwner(material.getOwner(), user, () -> material.setOwner(user));
+    private Material findMaterial(Long materialId) {
+        return materialRepository.findById(materialId)
+                .orElseThrow(() -> new RuntimeException("Material not found"));
     }
 
-    private String saveFile(MultipartFile file) {
+    private Course findCourse(Long courseId) {
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+    }
+
+    private Subject findSubject(Long subjectId) {
+        return subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+    }
+
+    private String uploadFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("File is required");
         }
+
         try {
-            Files.createDirectories(Paths.get(MATERIAL_UPLOAD_DIR));
+            Files.createDirectories(Paths.get(UPLOAD_FOLDER));
+
             String originalName = file.getOriginalFilename();
-            String name = System.currentTimeMillis() + "_" + (originalName == null ? "file" : originalName);
-            Path path = Paths.get(MATERIAL_UPLOAD_DIR + name);
-            Files.copy(file.getInputStream(), path);
-            return "/uploads/materials/" + name;
+            String safeName = originalName == null ? "file" : originalName;
+            String newFileName = System.currentTimeMillis() + "_" + safeName;
+
+            Path filePath = Paths.get(UPLOAD_FOLDER + newFileName);
+            Files.copy(file.getInputStream(), filePath);
+
+            return FILE_ACCESS_PATH + newFileName;
         } catch (Exception e) {
             throw new RuntimeException("File upload failed");
         }
     }
 
-    private Material getMaterialOrThrow(Long id) {
-        return materialRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
-    }
+    // ================= COURSES =================
 
     @Override
-    public Course createCourse(CourseDTO dto, User user) {
-        requireAuthenticated(user);
-        if (dto.getName() == null || dto.getName().isBlank()) {
+    public Course createCourse(CourseDTO courseDTO, User loggedUser) {
+        checkLogin(loggedUser);
+
+        if (courseDTO.getName() == null || courseDTO.getName().isBlank()) {
             throw new RuntimeException("Course name is required");
         }
+
         Course course = Course.builder()
-                .name(dto.getName())
-                .code(dto.getCode())
-                .description(dto.getDescription())
-                .owner(user)
+                .name(courseDTO.getName())
+                .code(courseDTO.getCode())
+                .description(courseDTO.getDescription())
+                .owner(loggedUser)
                 .createdAt(new Date())
                 .updatedAt(new Date())
                 .build();
-        return courseRepo.save(course);
+
+        return courseRepository.save(course);
     }
 
     @Override
-    public Course updateCourse(Long id, CourseDTO dto, User user) {
-        requireAuthenticated(user);
-        Course course = courseRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
-        ensureOwner(course.getOwner(), user, () -> course.setOwner(user));
-        if (dto.getName() != null) {
-            course.setName(dto.getName());
+    public Course updateCourse(Long courseId, CourseDTO courseDTO, User loggedUser) {
+        Course course = findCourse(courseId);
+
+        checkOwnership(course.getOwner(), loggedUser, () -> course.setOwner(loggedUser));
+
+        if (courseDTO.getName() != null) {
+            course.setName(courseDTO.getName());
         }
-        if (dto.getCode() != null) {
-            course.setCode(dto.getCode());
+
+        if (courseDTO.getCode() != null) {
+            course.setCode(courseDTO.getCode());
         }
-        if (dto.getDescription() != null) {
-            course.setDescription(dto.getDescription());
+
+        if (courseDTO.getDescription() != null) {
+            course.setDescription(courseDTO.getDescription());
         }
+
         course.setUpdatedAt(new Date());
-        return courseRepo.save(course);
+        return courseRepository.save(course);
     }
 
     @Override
-    public void deleteCourse(Long id, User user) {
-        requireAuthenticated(user);
-        Course course = courseRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
-        ensureOwner(course.getOwner(), user, () -> course.setOwner(user));
-        courseRepo.delete(course);
+    public void deleteCourse(Long courseId, User loggedUser) {
+        Course course = findCourse(courseId);
+
+        checkOwnership(course.getOwner(), loggedUser, () -> course.setOwner(loggedUser));
+
+        courseRepository.delete(course);
     }
 
     @Override
     public List<Course> getCourses() {
-        return courseRepo.findAll();
+        return courseRepository.findAll();
     }
 
     @Override
-    public Course getCourse(Long id) {
-        return courseRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+    public Course getCourse(Long courseId) {
+        return findCourse(courseId);
     }
 
     @Override
-    public List<Course> getMyCourses(User user) {
-        requireAuthenticated(user);
-        return courseRepo.findByOwner(user);
+    public List<Course> getMyCourses(User loggedUser) {
+        checkLogin(loggedUser);
+        return courseRepository.findByOwner(loggedUser);
     }
 
+    // ================= SUBJECTS =================
+
     @Override
-    public Subject createSubject(SubjectDTO dto, User user) {
-        requireAuthenticated(user);
-        if (dto.getCourseId() == null) {
+    public Subject createSubject(SubjectDTO subjectDTO, User loggedUser) {
+        checkLogin(loggedUser);
+
+        if (subjectDTO.getCourseId() == null) {
             throw new RuntimeException("Course is required");
         }
-        if (dto.getName() == null || dto.getName().isBlank()) {
+
+        if (subjectDTO.getName() == null || subjectDTO.getName().isBlank()) {
             throw new RuntimeException("Subject name is required");
         }
-        Course course = courseRepo.findById(dto.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        Course course = findCourse(subjectDTO.getCourseId());
+
         Subject subject = Subject.builder()
-                .name(dto.getName())
-                .code(dto.getCode())
-                .description(dto.getDescription())
+                .name(subjectDTO.getName())
+                .code(subjectDTO.getCode())
+                .description(subjectDTO.getDescription())
                 .course(course)
-                .owner(user)
+                .owner(loggedUser)
                 .createdAt(new Date())
                 .updatedAt(new Date())
                 .build();
-        return subjectRepo.save(subject);
+
+        return subjectRepository.save(subject);
     }
 
     @Override
-    public Subject updateSubject(Long id, SubjectDTO dto, User user) {
-        requireAuthenticated(user);
-        Subject subject = subjectRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
-        ensureOwner(subject.getOwner(), user, () -> subject.setOwner(user));
-        if (dto.getName() != null) {
-            subject.setName(dto.getName());
+    public Subject updateSubject(Long subjectId, SubjectDTO subjectDTO, User loggedUser) {
+        Subject subject = findSubject(subjectId);
+
+        checkOwnership(subject.getOwner(), loggedUser, () -> subject.setOwner(loggedUser));
+
+        if (subjectDTO.getName() != null) {
+            subject.setName(subjectDTO.getName());
         }
-        if (dto.getCode() != null) {
-            subject.setCode(dto.getCode());
+
+        if (subjectDTO.getCode() != null) {
+            subject.setCode(subjectDTO.getCode());
         }
-        if (dto.getDescription() != null) {
-            subject.setDescription(dto.getDescription());
+
+        if (subjectDTO.getDescription() != null) {
+            subject.setDescription(subjectDTO.getDescription());
         }
-        if (dto.getCourseId() != null) {
-            Course course = courseRepo.findById(dto.getCourseId())
-                    .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        if (subjectDTO.getCourseId() != null) {
+            Course course = findCourse(subjectDTO.getCourseId());
             subject.setCourse(course);
         }
+
         subject.setUpdatedAt(new Date());
-        return subjectRepo.save(subject);
+        return subjectRepository.save(subject);
     }
 
     @Override
-    public void deleteSubject(Long id, User user) {
-        requireAuthenticated(user);
-        Subject subject = subjectRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
-        ensureOwner(subject.getOwner(), user, () -> subject.setOwner(user));
-        subjectRepo.delete(subject);
+    public void deleteSubject(Long subjectId, User loggedUser) {
+        Subject subject = findSubject(subjectId);
+
+        checkOwnership(subject.getOwner(), loggedUser, () -> subject.setOwner(loggedUser));
+
+        subjectRepository.delete(subject);
     }
 
     @Override
     public List<Subject> getSubjects(Long courseId) {
         if (courseId == null) {
-            return subjectRepo.findAll();
+            return subjectRepository.findAll();
         }
-        Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
-        return subjectRepo.findByCourse(course);
+
+        Course course = findCourse(courseId);
+        return subjectRepository.findByCourse(course);
     }
 
     @Override
-    public Subject getSubject(Long id) {
-        return subjectRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
+    public Subject getSubject(Long subjectId) {
+        return findSubject(subjectId);
     }
 
     @Override
-    public List<Subject> getMySubjects(Long courseId, User user) {
-        requireAuthenticated(user);
+    public List<Subject> getMySubjects(Long courseId, User loggedUser) {
+        checkLogin(loggedUser);
+
         if (courseId == null) {
-            return subjectRepo.findByOwner(user);
+            return subjectRepository.findByOwner(loggedUser);
         }
-        Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
-        return subjectRepo.findByOwnerAndCourse(user, course);
+
+        Course course = findCourse(courseId);
+        return subjectRepository.findByOwnerAndCourse(loggedUser, course);
     }
 
+    // ================= MATERIALS =================
+
     @Override
-    public Material createMaterial(MaterialDTO dto, MultipartFile file, User user) {
-        requireAuthenticated(user);
-        if (dto.getSubjectId() == null) {
+    public Material createMaterial(MaterialDTO materialDTO, MultipartFile file, User loggedUser) {
+        checkLogin(loggedUser);
+
+        if (materialDTO.getSubjectId() == null) {
             throw new RuntimeException("Subject is required");
         }
-        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+
+        if (materialDTO.getTitle() == null || materialDTO.getTitle().isBlank()) {
             throw new RuntimeException("Title is required");
         }
-        Subject subject = subjectRepo.findById(dto.getSubjectId())
-                .orElseThrow(() -> new RuntimeException("Subject not found"));
-        MaterialType type = dto.getType() == null ? MaterialType.OTHER : dto.getType();
+
+        Subject subject = findSubject(materialDTO.getSubjectId());
+
+        MaterialType materialType = materialDTO.getType() == null
+                ? MaterialType.OTHER
+                : materialDTO.getType();
+
         Material material = Material.builder()
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .type(type)
+                .title(materialDTO.getTitle())
+                .description(materialDTO.getDescription())
+                .type(materialType)
                 .subject(subject)
-                .owner(user)
+                .owner(loggedUser)
                 .createdAt(new Date())
                 .updatedAt(new Date())
                 .build();
-        Material saved = materialRepo.save(material);
-        MaterialVersion version = MaterialVersion.builder()
-                .material(saved)
+
+        Material savedMaterial = materialRepository.save(material);
+
+        MaterialVersion firstVersion = MaterialVersion.builder()
+                .material(savedMaterial)
                 .versionNumber(1)
-                .fileUrl(saveFile(file))
+                .fileUrl(uploadFile(file))
                 .originalFilename(file.getOriginalFilename())
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
-                .uploadedBy(user)
+                .uploadedBy(loggedUser)
                 .uploadedAt(new Date())
                 .build();
-        versionRepo.save(version);
-        return saved;
+
+        materialVersionRepository.save(firstVersion);
+
+        return savedMaterial;
     }
 
     @Override
-    public Material updateMaterial(Long id, MaterialDTO dto, User user) {
-        Material material = getMaterialOrThrow(id);
-        ensureOwner(material, user);
-        if (dto.getTitle() != null) {
-            material.setTitle(dto.getTitle());
+    public Material updateMaterial(Long materialId, MaterialDTO materialDTO, User loggedUser) {
+        Material material = findMaterial(materialId);
+
+        checkOwnership(material.getOwner(), loggedUser, () -> material.setOwner(loggedUser));
+
+        if (materialDTO.getTitle() != null) {
+            material.setTitle(materialDTO.getTitle());
         }
-        if (dto.getDescription() != null) {
-            material.setDescription(dto.getDescription());
+
+        if (materialDTO.getDescription() != null) {
+            material.setDescription(materialDTO.getDescription());
         }
-        if (dto.getType() != null) {
-            material.setType(dto.getType());
+
+        if (materialDTO.getType() != null) {
+            material.setType(materialDTO.getType());
         }
-        if (dto.getSubjectId() != null) {
-            Subject subject = subjectRepo.findById(dto.getSubjectId())
-                    .orElseThrow(() -> new RuntimeException("Subject not found"));
+
+        if (materialDTO.getSubjectId() != null) {
+            Subject subject = findSubject(materialDTO.getSubjectId());
             material.setSubject(subject);
         }
+
         material.setUpdatedAt(new Date());
-        return materialRepo.save(material);
+        return materialRepository.save(material);
     }
 
     @Override
-    public void deleteMaterial(Long id, User user) {
-        Material material = getMaterialOrThrow(id);
-        ensureOwner(material, user);
-        versionRepo.deleteByMaterial(material);
-        materialRepo.delete(material);
+    public void deleteMaterial(Long materialId, User loggedUser) {
+        Material material = findMaterial(materialId);
+
+        checkOwnership(material.getOwner(), loggedUser, () -> material.setOwner(loggedUser));
+
+        materialVersionRepository.deleteByMaterial(material);
+        materialRepository.delete(material);
     }
 
     @Override
-    public Material getMaterial(Long id, User user) {
-        Material material = getMaterialOrThrow(id);
-        return material;
+    public Material getMaterial(Long materialId, User loggedUser) {
+        return findMaterial(materialId);
     }
 
     @Override
-    public List<Material> getMaterials(Long subjectId, Long courseId, User user) {
-        List<Material> materials;
+    public List<Material> getMaterials(Long subjectId, Long courseId, User loggedUser) {
         if (subjectId != null) {
-            Subject subject = subjectRepo.findById(subjectId)
-                    .orElseThrow(() -> new RuntimeException("Subject not found"));
-            materials = materialRepo.findBySubject(subject);
-        } else if (courseId != null) {
-            Course course = courseRepo.findById(courseId)
-                    .orElseThrow(() -> new RuntimeException("Course not found"));
-            materials = materialRepo.findBySubjectCourse(course);
-        } else {
-            materials = materialRepo.findAll();
+            Subject subject = findSubject(subjectId);
+            return materialRepository.findBySubject(subject);
         }
-        return materials;
-    }
 
-    @Override
-    public List<Material> getMyMaterials(Long subjectId, Long courseId, User user) {
-        requireAuthenticated(user);
-        if (subjectId != null) {
-            Subject subject = subjectRepo.findById(subjectId)
-                    .orElseThrow(() -> new RuntimeException("Subject not found"));
-            return materialRepo.findByOwnerAndSubject(user, subject);
-        }
         if (courseId != null) {
-            Course course = courseRepo.findById(courseId)
-                    .orElseThrow(() -> new RuntimeException("Course not found"));
-            return materialRepo.findByOwnerAndSubjectCourse(user, course);
+            Course course = findCourse(courseId);
+            return materialRepository.findBySubjectCourse(course);
         }
-        return materialRepo.findByOwner(user);
+
+        return materialRepository.findAll();
     }
 
     @Override
-    public MaterialVersion addVersion(Long materialId, String notes, MultipartFile file, User user) {
-        Material material = getMaterialOrThrow(materialId);
-        ensureOwner(material, user);
-        MaterialVersion latest = versionRepo.findTopByMaterialOrderByVersionNumberDesc(material);
-        int nextVersion = latest == null ? 1 : latest.getVersionNumber() + 1;
-        MaterialVersion version = MaterialVersion.builder()
+    public List<Material> getMyMaterials(Long subjectId, Long courseId, User loggedUser) {
+        checkLogin(loggedUser);
+
+        if (subjectId != null) {
+            Subject subject = findSubject(subjectId);
+            return materialRepository.findByOwnerAndSubject(loggedUser, subject);
+        }
+
+        if (courseId != null) {
+            Course course = findCourse(courseId);
+            return materialRepository.findByOwnerAndSubjectCourse(loggedUser, course);
+        }
+
+        return materialRepository.findByOwner(loggedUser);
+    }
+
+    // ================= MATERIAL VERSIONS =================
+
+    @Override
+    public MaterialVersion addVersion(Long materialId, String notes, MultipartFile file, User loggedUser) {
+        Material material = findMaterial(materialId);
+
+        checkOwnership(material.getOwner(), loggedUser, () -> material.setOwner(loggedUser));
+
+        MaterialVersion latestVersion =
+                materialVersionRepository.findTopByMaterialOrderByVersionNumberDesc(material);
+
+        int newVersionNumber = latestVersion == null
+                ? 1
+                : latestVersion.getVersionNumber() + 1;
+
+        MaterialVersion newVersion = MaterialVersion.builder()
                 .material(material)
-                .versionNumber(nextVersion)
-                .fileUrl(saveFile(file))
+                .versionNumber(newVersionNumber)
+                .fileUrl(uploadFile(file))
                 .originalFilename(file.getOriginalFilename())
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
                 .notes(notes)
-                .uploadedBy(user)
+                .uploadedBy(loggedUser)
                 .uploadedAt(new Date())
                 .build();
+
         material.setUpdatedAt(new Date());
-        materialRepo.save(material);
-        return versionRepo.save(version);
+        materialRepository.save(material);
+
+        return materialVersionRepository.save(newVersion);
     }
 
     @Override
-    public List<MaterialVersion> getVersions(Long materialId, User user) {
-        Material material = getMaterialOrThrow(materialId);
-        return versionRepo.findByMaterialOrderByVersionNumberDesc(material);
+    public List<MaterialVersion> getVersions(Long materialId, User loggedUser) {
+        Material material = findMaterial(materialId);
+        return materialVersionRepository.findByMaterialOrderByVersionNumberDesc(material);
     }
 
     @Override
-    public MaterialVersion getLatestVersion(Long materialId, User user) {
-        Material material = getMaterialOrThrow(materialId);
-        MaterialVersion version = versionRepo.findTopByMaterialOrderByVersionNumberDesc(material);
-        if (version == null) {
+    public MaterialVersion getLatestVersion(Long materialId, User loggedUser) {
+        Material material = findMaterial(materialId);
+
+        MaterialVersion latestVersion =
+                materialVersionRepository.findTopByMaterialOrderByVersionNumberDesc(material);
+
+        if (latestVersion == null) {
             throw new RuntimeException("No versions found");
         }
-        return version;
+
+        return latestVersion;
     }
 }
