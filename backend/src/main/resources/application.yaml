@@ -31,7 +31,7 @@ spring:
             enable: true
 
 server:
-  port: 4040
+  port: 8080
 
 jwt:
   secret: "Y2hhbGxlbwdlVG9Xcml0ZUZ1bGxQcikgaWN0YWJsZpNlY3JldEtleQ=="
