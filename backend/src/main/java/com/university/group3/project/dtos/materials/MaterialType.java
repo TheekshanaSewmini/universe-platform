@@ -3,7 +3,7 @@ package com.university.group3.project.dtos.materials;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum MaterialType {
-    NOTE,
+     NOTE,
     PDF,
     VIDEO,
     OTHER;
