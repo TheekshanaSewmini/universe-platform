@@ -12,6 +12,7 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findBySubject(Subject subject);
     List<Material> findBySubjectCourse(Course course);
     List<Material> findByOwner(User owner);
+
     List<Material> findByOwnerAndSubject(User owner, Subject subject);
     List<Material> findByOwnerAndSubjectCourse(User owner, Course course);
 }
