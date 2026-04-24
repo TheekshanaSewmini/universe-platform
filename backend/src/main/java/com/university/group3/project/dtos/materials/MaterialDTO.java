@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MaterialDTO {
-    private String title;
+    private String  title;
     private String description;
     private MaterialType type;
     private Long subjectId;
