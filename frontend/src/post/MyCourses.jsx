@@ -2,142 +2,216 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../api/axios";
 
+const emptyCourseForm = {
+  name: "",
+  code: "",
+  description: "",
+};
+
 export default function MyCourses() {
   const [courses, setCourses] = useState([]);
+  const [formData, setFormData] = useState(emptyCourseForm);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ name: "", code: "", description: "" });
-  const [editingId, setEditingId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchCourses();
+    loadMyCourses();
   }, []);
 
-  const fetchCourses = async () => {
+  const loadMyCourses = async () => {
     try {
-      const res = await api.get("/materials/courses/my");
-      setCourses(res.data);
-    } catch (err) {
+      const { data } = await api.get("/materials/courses/my");
+      setCourses(data);
+    } catch (error) {
       toast.error("Failed to load courses");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const name = form.name.trim();
-    const code = form.code.trim();
+  const updateField = (field, value) => {
+    setFormData((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData(emptyCourseForm);
+    setSelectedCourseId(null);
+  };
+
+  const validateCourse = () => {
+    const name = formData.name.trim();
+    const code = formData.code.trim();
+    const description = formData.description.trim();
 
     if (!name) {
       toast.error("Course name is required");
-      return;
+      return false;
     }
+
     if (name.length < 3) {
       toast.error("Course name must be at least 3 characters");
-      return;
+      return false;
     }
-    if (form.description.trim().length < 10) {
+
+    if (description.length < 10) {
       toast.error("Description must be at least 10 characters");
-      return;
+      return false;
     }
+
     if (code && code.length < 3) {
       toast.error("Course code must be at least 3 characters");
-      return;
+      return false;
     }
+
     if (code && !/^[A-Z]{2,6}\d{2,4}$/.test(code)) {
       toast.error("Course code must contain uppercase letters then digits, e.g. CS101 or MAT202");
-      return;
+      return false;
     }
 
-    setSubmitting(true);
+    return true;
+  };
+
+  const saveCourse = async (event) => {
+    event.preventDefault();
+
+    if (!validateCourse()) return;
+
+    setSaving(true);
+
     try {
-      if (editingId) {
-        const res = await api.put(`/materials/courses/update/${editingId}`, form);
+      if (selectedCourseId) {
+        const { data } = await api.put(
+            `/materials/courses/update/${selectedCourseId}`,
+            formData
+        );
+
+        setCourses((currentCourses) =>
+            currentCourses.map((course) =>
+                course.id === selectedCourseId ? data : course
+            )
+        );
+
         toast.success("Course updated");
-        setCourses(courses.map(c => c.id === editingId ? res.data : c));
-        setEditingId(null);
       } else {
-        const res = await api.post("/materials/courses/create", form);
+        const { data } = await api.post("/materials/courses/create", formData);
+
+        setCourses((currentCourses) => [data, ...currentCourses]);
+
         toast.success("Course created");
-        setCourses([res.data, ...courses]);
       }
-      setForm({ name: "", code: "", description: "" });
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Operation failed");
+
+      resetForm();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Operation failed");
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
   };
 
-  const handleEdit = (course) => {
-    setForm({ name: course.name, code: course.code, description: course.description });
-    setEditingId(course.id);
+  const startEdit = (course) => {
+    setSelectedCourseId(course.id);
+    setFormData({
+      name: course.name || "",
+      code: course.code || "",
+      description: course.description || "",
+    });
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this course? All subjects and materials will be removed.")) return;
+  const deleteCourse = async (courseId) => {
+    const confirmed = window.confirm(
+        "Delete this course? All subjects and materials will be removed."
+    );
+
+    if (!confirmed) return;
+
     try {
-      await api.delete(`/materials/courses/delete/${id}`);
+      await api.delete(`/materials/courses/delete/${courseId}`);
+
+      setCourses((currentCourses) =>
+          currentCourses.filter((course) => course.id !== courseId)
+      );
+
       toast.success("Course deleted");
-      setCourses(courses.filter(c => c.id !== id));
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Delete failed");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Delete failed");
     }
   };
 
-  if (loading) return <div className="loading-spinner">Loading courses...</div>;
+  if (loading) {
+    return <div className="loading-spinner">Loading courses...</div>;
+  }
 
   return (
-    <div className="manager-card">
-      <h2>My Courses</h2>
-      <form onSubmit={handleSubmit} className="form-inline">
-        <input
-          type="text"
-          placeholder="Course name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Course code (e.g., CS101)"
-          value={form.code}
-          onChange={(e) => setForm({ ...form, code: e.target.value })}
-        />
-        <textarea
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          rows="2"
-        />
-        <button type="submit" disabled={submitting}>
-          {editingId ? "Update" : "Create"}
-        </button>
-        {editingId && (
-          <button type="button" onClick={() => { setEditingId(null); setForm({ name: "", code: "", description: "" }); }}>
-            Cancel
-          </button>
-        )}
-      </form>
+      <div className="manager-card">
+        <h2>My Courses</h2>
 
-      <div className="items-grid">
-        {courses.map(course => (
-          <div key={course.id} className="item-card">
-            <div className="item-header">
-              <h3>{course.name}</h3>
-              <span className="badge">{course.code || "No code"}</span>
-            </div>
-            <p className="description">{course.description || "No description"}</p>
-            <div className="item-actions">
-              <button className="edit-btn" onClick={() => handleEdit(course)}>Edit</button>
-              <button className="delete-btn" onClick={() => handleDelete(course.id)}>Delete</button>
-            </div>
-          </div>
-        ))}
+        <form onSubmit={saveCourse} className="form-inline">
+          <input
+              type="text"
+              placeholder="Course name"
+              value={formData.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              required
+          />
+
+          <input
+              type="text"
+              placeholder="Course code (e.g., CS101)"
+              value={formData.code}
+              onChange={(e) => updateField("code", e.target.value)}
+          />
+
+          <textarea
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              rows="2"
+          />
+
+          <button type="submit" disabled={saving}>
+            {selectedCourseId ? "Update" : "Create"}
+          </button>
+
+          {selectedCourseId && (
+              <button type="button" onClick={resetForm}>
+                Cancel
+              </button>
+          )}
+        </form>
+
+        <div className="items-grid">
+          {courses.map((course) => (
+              <div key={course.id} className="item-card">
+                <div className="item-header">
+                  <h3>{course.name}</h3>
+                  <span className="badge">{course.code || "No code"}</span>
+                </div>
+
+                <p className="description">
+                  {course.description || "No description"}
+                </p>
+
+                <div className="item-actions">
+                  <button className="edit-btn" onClick={() => startEdit(course)}>
+                    Edit
+                  </button>
+
+                  <button
+                      className="delete-btn"
+                      onClick={() => deleteCourse(course.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+          ))}
+        </div>
       </div>
-    </div>
   );
 }
