@@ -4,6 +4,7 @@
   --brown-light: #f5e7d9;
   --brown: #b97f44;
   --brown-dark: #9b6a3a;
+  --border: var(--brown-light);
   --text-dark: #4a3b2c;
   --text-muted: #7c6b5a;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -25,7 +26,7 @@ body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-dark);
   line-height: 1.5;
-  padding: 2rem;
+  padding: 1.5rem;
   min-height: 100vh;
   animation: fadeIn 0.6s ease-out;
 }
@@ -61,7 +62,7 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 1;
-  background: rgba(255,255,255,0.62);
+  background: rgba(255, 255, 255, 0.68);
 }
 .librarian-dashboard > * {
   position: relative;
@@ -84,12 +85,86 @@ body {
   grid-template-columns: 320px 1fr;
   gap: 2rem;
   margin-top: 2rem;
+  align-items: start;
 }
 
 .dashboard-sidebar {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.profile-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.8rem;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brown);
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: var(--brown-light);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--brown);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.profile-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.profile-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.profile-view-btn {
+  background: var(--brown);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.profile-view-btn:hover {
+  background: var(--brown-dark);
+  transform: translateY(-2px);
 }
 
 .stats-card {
@@ -401,7 +476,7 @@ body {
 
 .bookings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -409,7 +484,7 @@ body {
 .booking-card {
   background: var(--card);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--brown-light);
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
@@ -500,7 +575,18 @@ body {
 
 .passkey-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.5rem;
+  flex-wrap: wrap;
   margin-top: 0.5rem;
+}
+
+@media (max-width: 420px) {
+  .bookings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .insights-card {
+    grid-template-columns: 1fr;
+  }
 }
