@@ -13,7 +13,7 @@ This system provides:
 - 👤 **User Management Module** — for authentication and access control 
 - 🔍 **Lost & Found Module** — for reporting and recovering items 
 - 📚 **Library Seat Availability Module** — for managing study space usage   
-- 🤖 **AI Assistant** — to help users with queries and guidance 
+- 📖 **Study Materials Module** — for uploading, sharing, and accessing academic resources
 
 > Developed as part of the SLIIT ITPM coursework.
 
@@ -27,7 +27,7 @@ This system provides:
 
 - 📚 **Library Seat Availability** — view available seats, monitor occupancy, and manage study space usage.
 
-- 🤖 **AI Assistant** — provides help, answers user queries, and assists with system navigation.
+- 📖 **Study Materials** — students can upload their own study materials, set visibility as public or private, and access shared resources based on subject. Includes notifications for newly added materials
 
 - 🔎 **Search & Filters** — quickly find items or seat availability using filters.
 
