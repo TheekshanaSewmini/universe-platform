@@ -1,6 +1,6 @@
 #  🎓 Universe Platform 
 
-A web-based system designed for university students to enhance campus life through essential services such as Lost & Found and Library Seat Availability.
+A web-based system designed for university students to enhance campus life through essential services such as Lost & Found, Library Seat Availability, and a Study Materials platform for uploading, sharing, and accessing academic resources.
 
 ---
 
