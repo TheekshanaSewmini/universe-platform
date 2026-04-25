@@ -39,14 +39,14 @@ This system provides:
 
 ## 🧠 Tech Stack
 
-| Layer          | Technologies                          |
-|----------------|--------------------------------------|
-| Frontend       | React, Vite, Tailwind CSS            |
-| Backend        | Java 17+, Spring Boot                |
-| Database       | MySQL                                |
-| Authentication | JWT, BCrypt                          |
-| AI             | OpenAI API / Chatbot Integration     |
-| Tools          | Maven, Postman, VS Code              |
+| Layer          | Technologies                     |
+| -------------- | -------------------------------- |
+| Frontend       | React, Vite, Tailwind CSS        |
+| Backend        | Java 17+, Spring Boot            |
+| Database       | MySQL                            |
+| Authentication | JWT, BCrypt                      |
+| AI             | OpenAI API / Chatbot Integration |
+| Tools          | VS Code, IntelliJ IDEA, pgAdmin  |
 
 ---
 
