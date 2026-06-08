@@ -196,81 +196,13 @@ body {
   padding: 1.8rem;
 }
 
-.detail-info .fancy-title {
-  font-family: 'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 2.1rem;
-  font-weight: 800;
-  margin-bottom: 1.2rem;
-  color: #b97f44;
-  letter-spacing: 0.01em;
-  text-shadow: 0 2px 12px #f5e7d9, 0 1px 0 #fff;
-  border-left: 5px solid var(--gold);
-  padding-left: 1rem;
-  background: linear-gradient(90deg, #fffbe6 60%, #f5e7d9 100%);
-  border-radius: 0 18px 18px 0;
-}
-
-.info-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1.2rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-.info-list li {
-  background: #fff7ef;
-  border-radius: 30px;
-  padding: 0.7rem 1.2rem;
-  font-size: 1.05rem;
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  box-shadow: 0 2px 8px rgba(201, 167, 59, 0.07);
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-  font-weight: 500;
-  color: #7c6b5a;
-  border: 1px solid #f5e7d9;
-}
-.emoji {
-  font-size: 1.2em;
-  margin-right: 0.2em;
-}
-.desc-block {
-  background: #fffbe6;
-  border-radius: 18px;
-  padding: 1rem 1.2rem;
-  font-size: 1.05rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  box-shadow: 0 2px 8px rgba(201, 167, 59, 0.07);
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-  font-weight: 500;
-  color: #4a3b2c;
-  border: 1px solid #f5e7d9;
-}
-
-.modern-btn {
-  font-family: 'Poppins', 'Inter', 'Segoe UI', Arial, sans-serif;
-  font-size: 1.08rem;
-  font-weight: 600;
-  border-radius: 30px;
-  padding: 0.7rem 2.2rem;
-  background: linear-gradient(90deg, #ffe7b2 0%, #f5e7d9 100%);
-  color: #b97f44;
-  border: 2px solid #c9a73b;
-  box-shadow: 0 2px 8px rgba(201, 167, 59, 0.09);
-  margin: 0 0.5rem;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
-.modern-btn:hover {
-  background: linear-gradient(90deg, #f5e7d9 0%, #ffe7b2 100%);
-  color: #fff;
-  border-color: #b97f44;
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 4px 16px rgba(201, 167, 59, 0.13);
+.detail-info h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--brown-dark);
+  border-left: 3px solid var(--gold);
+  padding-left: 0.8rem;
 }
 
 .detail-info p {

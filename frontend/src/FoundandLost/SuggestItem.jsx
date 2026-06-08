@@ -69,7 +69,7 @@ export default function SuggestItem() {
           <div className="search-wrapper">
             <input
               type="text"
-              placeholder="Type"
+              placeholder="e.g., 'laptop', 'wallet', 'keys'"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

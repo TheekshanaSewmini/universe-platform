@@ -1,34 +1,12 @@
 import { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import api from "../api/axios";
 import "./SeatsPage.css";
 import Navbar from "../components/Navbar";
 
-const SECTION_OPTIONS = [
-  { value: "UPPER_A_SIDE", label: "A - Upper Tier" },
-  { value: "A_SIDE", label: "A - Central Zone" },
-  { value: "BASE_A_SIDE", label: "A - Lower Tier" },
-  { value: "UPPER_B_SIDE", label: "B - Upper Tier" },
-  { value: "B_SIDE", label: "B - Central Zone" },
-  { value: "BASE_B_SIDE", label: "B - Lower Tier" },
-];
-
-const SECTION_RENDER_ORDER = [
-  "UPPER_A_SIDE",
-  "UPPER_B_SIDE",
-  "A_SIDE",
-  "B_SIDE",
-  "BASE_A_SIDE",
-  "BASE_B_SIDE",
-];
-
-const getSectionLabel = (sectionValue) => {
-  const match = SECTION_OPTIONS.find((item) => item.value === sectionValue);
-  return match ? match.label : String(sectionValue || "").replace(/_/g, " ");
-};
-
 export default function SeatsPage() {
+  const navigate = useNavigate();
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,7 +16,7 @@ export default function SeatsPage() {
   const [editForm, setEditForm] = useState({ seatNumber: "", section: "" });
   const [searchTerm, setSearchTerm] = useState("");
 
-  const sections = SECTION_OPTIONS.map((item) => item.value);
+  const sections = ["A_SIDE", "B_SIDE", "UPPER_A_SIDE", "UPPER_B_SIDE", "BASE_A_SIDE", "BASE_B_SIDE"];
 
   const fetchSeats = async () => {
     try {
@@ -53,9 +31,6 @@ export default function SeatsPage() {
 
   useEffect(() => {
     fetchSeats();
-
-    const intervalId = setInterval(fetchSeats, 10000);
-    return () => clearInterval(intervalId);
   }, []);
 
   const filteredSeats = seats.filter((seat) =>
@@ -122,9 +97,7 @@ export default function SeatsPage() {
   };
 
   return (
-    <div className="seats-page">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Navbar />
+    <div className="seats-page"><Navbar />
       <div className="seats-container">
         <div className="page-header">
           <h1>Seat Management</h1>
@@ -149,6 +122,9 @@ export default function SeatsPage() {
               />
               <span className="search-icon">🔍</span>
             </div>
+            <button className="add-seat-btn" onClick={() => navigate("/addseat")}>
+              + Add Seat
+            </button>
           </div>
         </div>
 
@@ -158,13 +134,13 @@ export default function SeatsPage() {
           <div className="error-message">{error}</div>
         ) : (
           <div className="sections-grid">
-            {SECTION_RENDER_ORDER.map((section) => {
+            {sections.map((section) => {
               const sectionSeats = seatsBySection[section] || [];
               if (sectionSeats.length === 0) return null;
               return (
                 <div key={section} className="section-card">
                   <div className="section-header">
-                    <h3>{getSectionLabel(section)}</h3>
+                    <h3>{section.replace(/_/g, " ")}</h3>
                     <span className="badge">{sectionSeats.length}</span>
                   </div>
                   <div className="seats-grid">
@@ -201,7 +177,7 @@ export default function SeatsPage() {
                   </div>
                   <div className="info-row">
                     <span className="label">Section:</span>
-                    <span>{getSectionLabel(selectedSeat.section)}</span>
+                    <span>{selectedSeat.section?.replace(/_/g, " ")}</span>
                   </div>
                 </>
               ) : (
@@ -220,8 +196,8 @@ export default function SeatsPage() {
                       value={editForm.section}
                       onChange={(e) => setEditForm({ ...editForm, section: e.target.value })}
                     >
-                      {SECTION_OPTIONS.map((sec) => (
-                        <option key={sec.value} value={sec.value}>{sec.label}</option>
+                      {sections.map((sec) => (
+                        <option key={sec} value={sec}>{sec.replace(/_/g, " ")}</option>
                       ))}
                     </select>
                   </div>
@@ -247,3 +223,7 @@ export default function SeatsPage() {
     </div>
   );
 }
+
+
+
+

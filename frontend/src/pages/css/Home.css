@@ -38,27 +38,6 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
-  min-height: 100vh;
-  background: url('../assets/home.jpeg') no-repeat center center fixed;
-  background-size: cover;
-  position: relative;
-  z-index: 0;
-}
-
-.user-dashboard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-  background: rgba(255,255,255,0.62);
-}
-.user-dashboard > * {
-  position: relative;
-  z-index: 2;
 }
 
 .dashboard-nav {

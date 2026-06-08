@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../api/axios";
 import "./CheckAvailability.css";
 import Navbar from "../components/Navbar";
@@ -86,13 +85,10 @@ export default function CheckAvailability() {
   const sectionSeats = seats.filter(s => (s.section || s.seatSection) === selectedSection);
 
   return (
-    <div className="check-availability-page">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Navbar />
+    <div className="check-availability-page"><Navbar />
       <div className="container">
         <div className="page-header">
-           <h1>Check Seat Availability</h1>
-
+          <h1>Check Seat Availability</h1>
           <p>Verify if a seat is free for a specific time slot</p>
         </div>
 
@@ -173,3 +169,7 @@ export default function CheckAvailability() {
     </div>
   );
 }
+
+
+
+

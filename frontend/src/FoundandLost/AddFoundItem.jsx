@@ -152,19 +152,19 @@ export default function AddFoundItem() {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Item Name</label>
-              <input type="text" name="itemName" value={form.itemName} onChange={handleChange} placeholder="" required />
+              <input type="text" name="itemName" value={form.itemName} onChange={handleChange} placeholder="e.g., Blue Backpack" required />
             </div>
             <div className="form-group">
               <label>Description</label>
-              <textarea name="description" value={form.description} onChange={handleChange} rows="4" placeholder="" required></textarea>
+              <textarea name="description" value={form.description} onChange={handleChange} rows="4" placeholder="Describe the item in detail" required></textarea>
             </div>
             <div className="form-group">
               <label>Found Place</label>
-              <input type="text" name="foundPlace" value={form.foundPlace} onChange={handleChange} placeholder="" required />
+              <input type="text" name="foundPlace" value={form.foundPlace} onChange={handleChange} placeholder="Where was it found?" required />
             </div>
             <div className="form-group">
-              <label>Your Name</label>
-              <input type="text" name="publisherName" value={form.publisherName} onChange={handleChange} placeholder="" required />
+              <label>Publisher Name</label>
+              <input type="text" name="publisherName" value={form.publisherName} onChange={handleChange} placeholder="Your name" required />
             </div>
             <div className="form-group">
               <label>Contact Phone</label>
@@ -173,7 +173,7 @@ export default function AddFoundItem() {
                 name="contactPhone"
                 value={form.contactPhone}
                 onChange={handlePhoneChange}
-                placeholder="+94XX-XXX-XXXX"
+                placeholder="10‑digit number (e.g., 1234567890)"
                 required
               />
             </div>

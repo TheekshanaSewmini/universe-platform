@@ -22,7 +22,6 @@ export default function FoundItemDetail() {
     semester: "",
     foundDate: "",
   });
-  const [formErrors, setFormErrors] = useState({});
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -54,153 +53,21 @@ export default function FoundItemDetail() {
         setLoading(false);
       }
     };
-
     fetchItem();
   }, [id]);
-
-  const getFieldLabel = (fieldName) => {
-    const labels = {
-      description: "Description",
-      foundPlace: "Found Place",
-      publisherName: "Your Name",
-      contactPhone: "Contact Phone",
-      year: "Year",
-      semester: "Semester",
-      image: "Image",
-    };
-
-    return labels[fieldName] || fieldName;
-  };
-
-  const validateField = (name, value) => {
-    switch (name) {
-      case "description":
-        if (!value.trim()) return "is required";
-        if (value.trim().length <= 10) {
-          return "error";
-        }
-        return "";
-
-      case "foundPlace":
-        if (!value.trim()) return "is required";
-        return "";
-
-      case "publisherName":
-        if (!value.trim()) return "is required";
-        return "";
-
-      case "contactPhone":
-        if (!value.trim()) return "is required";
-        if (!/^\d+$/.test(value)) return "must contain only digits";
-        if (value.length !== 10) return "error";
-        return "";
-
-      case "year":
-        if (!value) return "is required";
-        return "";
-
-      case "semester":
-        if (!value) return "is required";
-        return "";
-
-      case "image":
-        if (!imageFile && !imagePreview) return "is required";
-        return "";
-
-      default:
-        return "";
-    }
-  };
-
-  const validateForm = () => {
-    const errors = {
-      description: validateField("description", editForm.description),
-      foundPlace: validateField("foundPlace", editForm.foundPlace),
-      publisherName: validateField("publisherName", editForm.publisherName),
-      contactPhone: validateField("contactPhone", editForm.contactPhone),
-      year: validateField("year", editForm.year),
-      semester: validateField("semester", editForm.semester),
-      image: validateField("image", imageFile),
-    };
-
-    setFormErrors(errors);
-    return errors;
-  };
-
-  const handleInputChange = (field, value) => {
-    if (field === "contactPhone") {
-      value = value.replace(/\D/g, "").slice(0, 10);
-    }
-
-    setEditForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    setFormErrors((prev) => ({
-      ...prev,
-      [field]: validateField(field, value),
-    }));
-  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImageFile(file);
-
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
-
-      setFormErrors((prev) => ({
-        ...prev,
-        image: "",
-      }));
-    } else {
-      setFormErrors((prev) => ({
-        ...prev,
-        image: validateField("image", null),
-      }));
     }
-  };
-
-  const handleEditClick = () => {
-    setEditMode(true);
-    setFormErrors({});
-  };
-
-  const handleCancelEdit = () => {
-    setEditMode(false);
-    setFormErrors({});
-    setImageFile(null);
-    setEditForm({
-      itemName: item.itemName || "",
-      description: item.description || "",
-      foundPlace: item.foundPlace || "",
-      publisherName: item.publisherName || "",
-      contactPhone: item.contactPhone || "",
-      year: item.year || "",
-      semester: item.semester || "",
-      foundDate: item.foundDate ? item.foundDate.split("T")[0] : "",
-    });
-    setImagePreview(toAbsolute(item.imageUrl));
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-
-    const errors = validateForm();
-    const errorEntries = Object.entries(errors).filter(([, message]) => message);
-
-    if (errorEntries.length > 0) {
-      const errorMessage = errorEntries
-        .map(([field, message]) => `${getFieldLabel(field)}: ${message}`)
-        .join(", ");
-
-      toast.error(errorMessage);
-      return;
-    }
-
     setSubmitting(true);
     try {
       const formData = new FormData();
@@ -212,31 +79,15 @@ export default function FoundItemDetail() {
       formData.append("year", editForm.year);
       formData.append("semester", editForm.semester);
       formData.append("foundDate", editForm.foundDate);
-
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
-
+      if (imageFile) formData.append("image", imageFile);
       const res = await api.put(`/lostfound/found/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       toast.success("Item updated successfully!");
       setItem(res.data);
       setEditMode(false);
       setImageFile(null);
       setImagePreview(toAbsolute(res.data.imageUrl));
-      setFormErrors({});
-      setEditForm({
-        itemName: res.data.itemName || "",
-        description: res.data.description || "",
-        foundPlace: res.data.foundPlace || "",
-        publisherName: res.data.publisherName || "",
-        contactPhone: res.data.contactPhone || "",
-        year: res.data.year || "",
-        semester: res.data.semester || "",
-        foundDate: res.data.foundDate ? res.data.foundDate.split("T")[0] : "",
-      });
     } catch (err) {
       toast.error(err.response?.data?.message || "Update failed");
     } finally {
@@ -260,8 +111,7 @@ export default function FoundItemDetail() {
   if (!item) return null;
 
   return (
-    <div className="found-item-detail-page">
-      <Navbar />
+    <div className="found-item-detail-page"><Navbar />
       <div className="container">
         <div className="page-header">
           <button className="back-btn" onClick={() => navigate("/my-found")}>
@@ -281,147 +131,75 @@ export default function FoundItemDetail() {
                   <div className="no-image">📷</div>
                 )}
               </div>
-
               <div className="detail-info">
-                <h2 className="fancy-title">{item.itemName}</h2>
-                <ul className="info-list">
-                  <li><span className="emoji">🗺️</span> <span>{item.foundPlace}</span></li>
-                  <li><span className="emoji">🧑‍💼</span> <span>{item.publisherName}</span></li>
-                  <li><span className="emoji">📱</span> <span>{item.contactPhone || "Not provided"}</span></li>
-                  <li><span className="emoji">📆</span> <span>{new Date(item.foundDate).toLocaleDateString()}</span></li>
-                  <li><span className="emoji">🎓</span> <span>{item.year} – {item.semester}</span></li>
-                </ul>
-                <div className="desc-block">
-                  <span className="emoji">📝</span>
-                  <span>{item.description}</span>
-                </div>
+                <h2>{item.itemName}</h2>
+                <p className="location">📍 {item.foundPlace}</p>
+                <p className="publisher">👤 {item.publisherName}</p>
+                <p className="contact">📞 {item.contactPhone || "Not provided"}</p>
+                <p className="date">📅 {new Date(item.foundDate).toLocaleDateString()}</p>
+                <p className="semester">📅 {item.year} – {item.semester}</p>
+                <p className="description">{item.description}</p>
               </div>
-
               <div className="detail-actions">
-                <button className="edit-btn modern-btn" onClick={handleEditClick}>
-                  ✏️ Edit
+                <button className="edit-btn" onClick={() => setEditMode(true)}>
+                  Edit
                 </button>
-                <button className="delete-btn modern-btn" onClick={handleDelete}>
-                  🗑️ Delete
+                <button className="delete-btn" onClick={handleDelete}>
+                  Delete
                 </button>
               </div>
             </>
           ) : (
-            <form onSubmit={handleUpdate} className="edit-form" noValidate>
+            <form onSubmit={handleUpdate} className="edit-form">
               <div className="form-group">
                 <label>Item Name</label>
                 <input
                   type="text"
                   value={editForm.itemName}
-                  disabled
-                  readOnly
+                  onChange={(e) => setEditForm({ ...editForm, itemName: e.target.value })}
+                  required
                 />
               </div>
-
               <div className="form-group">
                 <label>Description</label>
                 <textarea
                   rows="4"
                   value={editForm.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                  onBlur={(e) =>
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      description: validateField("description", e.target.value),
-                    }))
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                   required
                 />
-                {formErrors.description && (
-                  <small className="validation-error">
-                    Description {formErrors.description}
-                  </small>
-                )}
               </div>
-
               <div className="form-group">
                 <label>Found Place</label>
                 <input
                   type="text"
                   value={editForm.foundPlace}
-                  onChange={(e) =>
-                    handleInputChange("foundPlace", e.target.value)
-                  }
-                  onBlur={(e) =>
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      foundPlace: validateField("foundPlace", e.target.value),
-                    }))
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, foundPlace: e.target.value })}
                   required
                 />
-                {formErrors.foundPlace && (
-                  <small className="validation-error">
-                    Found Place {formErrors.foundPlace}
-                  </small>
-                )}
               </div>
-
               <div className="form-group">
                 <label>Your Name</label>
                 <input
                   type="text"
                   value={editForm.publisherName}
-                  onChange={(e) =>
-                    handleInputChange("publisherName", e.target.value)
-                  }
-                  onBlur={(e) =>
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      publisherName: validateField("publisherName", e.target.value),
-                    }))
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, publisherName: e.target.value })}
                   required
                 />
-                {formErrors.publisherName && (
-                  <small className="validation-error">
-                    Your Name {formErrors.publisherName}
-                  </small>
-                )}
               </div>
-
               <div className="form-group">
                 <label>Contact Phone</label>
                 <input
                   type="tel"
                   value={editForm.contactPhone}
-                  onChange={(e) =>
-                    handleInputChange("contactPhone", e.target.value)
-                  }
-                  onBlur={(e) =>
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      contactPhone: validateField("contactPhone", e.target.value),
-                    }))
-                  }
-                  maxLength={10}
-                  required
+                  onChange={(e) => setEditForm({ ...editForm, contactPhone: e.target.value })}
                 />
-                {formErrors.contactPhone && (
-                  <small className="validation-error">
-                    Contact Phone {formErrors.contactPhone}
-                  </small>
-                )}
               </div>
-
               <div className="form-group">
                 <label>Year</label>
                 <select
                   value={editForm.year}
-                  onChange={(e) => handleInputChange("year", e.target.value)}
-                  onBlur={(e) =>
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      year: validateField("year", e.target.value),
-                    }))
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
                   required
                 >
                   <option value="">Select Year</option>
@@ -430,74 +208,43 @@ export default function FoundItemDetail() {
                   <option value="THIRD">Third Year</option>
                   <option value="FOURTH">Fourth Year</option>
                 </select>
-                {formErrors.year && (
-                  <small className="validation-error">
-                    Year {formErrors.year}
-                  </small>
-                )}
               </div>
-
               <div className="form-group">
                 <label>Semester</label>
                 <select
                   value={editForm.semester}
-                  onChange={(e) =>
-                    handleInputChange("semester", e.target.value)
-                  }
-                  onBlur={(e) =>
-                    setFormErrors((prev) => ({
-                      ...prev,
-                      semester: validateField("semester", e.target.value),
-                    }))
-                  }
+                  onChange={(e) => setEditForm({ ...editForm, semester: e.target.value })}
                   required
                 >
                   <option value="">Select Semester</option>
                   <option value="SEM1">Semester 1</option>
                   <option value="SEM2">Semester 2</option>
                 </select>
-                {formErrors.semester && (
-                  <small className="validation-error">
-                    Semester {formErrors.semester}
-                  </small>
-                )}
               </div>
-
               <div className="form-group">
                 <label>Date Found</label>
                 <input
                   type="date"
                   name="foundDate"
                   value={editForm.foundDate}
-                  disabled
-                  readOnly
+                  onChange={(e) => setEditForm({ ...editForm, foundDate: e.target.value })}
+                  required
                 />
               </div>
-
               <div className="form-group">
                 <label>Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-                {formErrors.image && (
-                  <small className="validation-error">
-                    Image {formErrors.image}
-                  </small>
-                )}
+                <input type="file" accept="image/*" onChange={handleImageChange} />
                 {imagePreview && (
                   <div className="image-preview">
                     <img src={imagePreview} alt="Preview" />
                   </div>
                 )}
               </div>
-
               <div className="form-actions">
                 <button type="submit" disabled={submitting}>
                   {submitting ? "Saving..." : "Save Changes"}
                 </button>
-                <button type="button" onClick={handleCancelEdit}>
+                <button type="button" onClick={() => setEditMode(false)}>
                   Cancel
                 </button>
               </div>
@@ -508,3 +255,7 @@ export default function FoundItemDetail() {
     </div>
   );
 }
+
+
+
+

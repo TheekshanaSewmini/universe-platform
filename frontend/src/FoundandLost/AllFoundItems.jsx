@@ -79,18 +79,18 @@ export default function AllFoundItems() {
           <div className="search-box">
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search by item name or place..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="search-icon"></span>
+            <span className="search-icon">🔍</span>
           </div>
           <div className="action-buttons">
             <button className="my-found-btn" onClick={() => navigate("/my-found")}>
-              My Found Items
+              📋 My Found Items
             </button>
             <button className="add-found-btn" onClick={() => navigate("/add-found")}>
-              Report Found Item
+              + Report Found Item
             </button>
           </div>
         </div>

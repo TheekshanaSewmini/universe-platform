@@ -44,28 +44,7 @@ body {
 .librarian-dashboard {
   max-width: 1400px;
   margin: 0 auto;
-  min-height: 100vh;
-  background: url('../../assets/booking-bg.jpg.png') no-repeat center center fixed;
-  background-size: cover;
-  position: relative;
-  z-index: 0;
   animation: slideUp 0.5s ease-out;
-}
-
-.librarian-dashboard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-  background: rgba(255,255,255,0.62);
-}
-.librarian-dashboard > * {
-  position: relative;
-  z-index: 2;
 }
 
 @keyframes slideUp {

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../api/axios";
 import "./SeatAvailability.css";
 import Navbar from "../components/Navbar";
@@ -97,13 +96,10 @@ export default function SeatAvailability() {
   const sectionSeats = seats.filter(s => (s.section || s.seatSection) === selectedSection);
 
   return (
-    <div className="seat-availability-page">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Navbar />
+    <div className="seat-availability-page"><Navbar />
       <div className="container">
         <div className="page-header">
-           <h1> Seat Booking Availability</h1>
-
+          <h1> Seat Booking Availability</h1>
           <p>Select a section, seat, and date to view time slots</p>
         </div>
 
@@ -239,3 +235,7 @@ export default function SeatAvailability() {
     </div>
   );
 }
+
+
+
+

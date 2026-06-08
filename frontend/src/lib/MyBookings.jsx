@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../api/axios";
 import "./MyBookings.css";
 import Navbar from "../components/Navbar";
@@ -60,9 +59,7 @@ export default function MyBookings() {
   const toggleReveal = (id) => setRevealed(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="my-bookings-page">
-      <ToastContainer position="top-right" autoClose={3000} />
-      <Navbar />
+    <div className="my-bookings-page"><Navbar />
       <div className="container">
         <div className="page-header">
           <h1>My Bookings</h1>
@@ -129,3 +126,7 @@ export default function MyBookings() {
     </div>
   );
 }
+
+
+
+

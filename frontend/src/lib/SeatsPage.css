@@ -30,19 +30,8 @@ body {
 
 .seats-page {
   min-height: 100vh;
-  position: relative;
-  isolation: isolate;
+  background: var(--bg);
   padding: 1.5rem;
-}
-
-.seats-page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(rgba(254, 249, 240, 0.62), rgba(254, 249, 240, 0.7)),
-    url("../assets/booking-bg.jpg.png") center / cover no-repeat;
 }
 
 .seats-container {

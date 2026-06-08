@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../api/axios";
 import "./AllBookings.css";
 import Navbar from "../components/Navbar";
@@ -18,6 +17,7 @@ export default function AllBookings() {
       try {
         const res = await api.get("/student/booking/all");
         setBookings(res.data);
+        console.log("Bookings data:", res.data); // debug: check structure
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load bookings");
         toast.error("Could not load bookings");
@@ -25,11 +25,7 @@ export default function AllBookings() {
         setLoading(false);
       }
     };
-
     fetchBookings();
-
-    const intervalId = setInterval(fetchBookings, 10000);
-    return () => clearInterval(intervalId);
   }, []);
 
   const handleCancel = async (bookingId) => {
@@ -81,9 +77,7 @@ export default function AllBookings() {
   });
 
   return (
-    <div className="all-bookings-page">
-
-      <Navbar />
+    <div className="all-bookings-page"><Navbar />
       <div className="container">
         <div className="page-header">
           <h1>All Bookings</h1>
@@ -160,3 +154,7 @@ export default function AllBookings() {
     </div>
   );
 }
+
+
+
+

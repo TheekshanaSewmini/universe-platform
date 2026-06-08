@@ -1,24 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import api from "../api/axios";
 import "./AddSeat.css";
 import Navbar from "../components/Navbar";
-
-const SECTION_OPTIONS = [
-  { value: "UPPER_A_SIDE", label: "A - Upper Tier" },
-  { value: "A_SIDE", label: "A - Central Zone" },
-  { value: "BASE_A_SIDE", label: "A - Lower Tier" },
-  { value: "UPPER_B_SIDE", label: "B - Upper Tier" },
-  { value: "B_SIDE", label: "B - Central Zone" },
-  { value: "BASE_B_SIDE", label: "B - Lower Tier" },
-];
-
-const getSectionLabel = (sectionValue) => {
-  const match = SECTION_OPTIONS.find((item) => item.value === sectionValue);
-  return match ? match.label : String(sectionValue || "").replace(/_/g, " ");
-};
 
 export default function AddSeat() {
   const navigate = useNavigate();
@@ -26,8 +11,17 @@ export default function AddSeat() {
   const [addedSeat, setAddedSeat] = useState(null);
   const [form, setForm] = useState({
     seatNumber: "",
-    section: "UPPER_A_SIDE",
+    section: "A_SIDE",
   });
+
+  const sections = [
+    "A_SIDE",
+    "B_SIDE",
+    "UPPER_A_SIDE",
+    "UPPER_B_SIDE",
+    "BASE_A_SIDE",
+    "BASE_B_SIDE",
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,7 +60,7 @@ export default function AddSeat() {
 
       toast.success(`Seat ${form.seatNumber} added successfully!`);
  
-      setForm({ seatNumber: "", section: "UPPER_A_SIDE" });
+      setForm({ seatNumber: "", section: "A_SIDE" });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add seat");
     } finally {
@@ -75,9 +69,7 @@ export default function AddSeat() {
   };
 
   return (
-    <div className="add-seat-page">
-
-      <Navbar />
+    <div className="add-seat-page"><Navbar />
       <div className="add-seat-container">
         <div className="add-seat-card">
           <h2>Add New Seat</h2>
@@ -99,9 +91,9 @@ export default function AddSeat() {
             <div className="form-group">
               <label>Section</label>
               <select name="section" value={form.section} onChange={handleChange}>
-                {SECTION_OPTIONS.map((sec) => (
-                  <option key={sec.value} value={sec.value}>
-                    {sec.label}
+                {sections.map((sec) => (
+                  <option key={sec} value={sec}>
+                    {sec.replace(/_/g, " ")}
                   </option>
                 ))}
               </select>
@@ -117,7 +109,7 @@ export default function AddSeat() {
               <div className="seat-details">
                 <p><strong>Seat ID:</strong> {addedSeat.id}</p>
                 <p><strong>Seat Number:</strong> {addedSeat.seatNumber}</p>
-                <p><strong>Section:</strong> {getSectionLabel(addedSeat.section)}</p>
+                <p><strong>Section:</strong> {addedSeat.section?.replace(/_/g, " ")}</p>
               </div>
               <button
                 className="view-all-btn"
@@ -136,3 +128,7 @@ export default function AddSeat() {
     </div>
   );
 }
+
+
+
+

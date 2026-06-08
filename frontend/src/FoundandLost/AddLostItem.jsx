@@ -188,7 +188,7 @@ export default function AddLostItem() {
               name="contactPhone"
               value={form.contactPhone}
               onChange={handlePhoneChange}
-              placeholder="+94XX-XXX-XXX"
+              placeholder="10‑digit number (optional)"
             />
           </div>
           <div className="form-group">

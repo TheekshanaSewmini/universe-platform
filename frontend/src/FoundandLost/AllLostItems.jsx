@@ -79,18 +79,18 @@ export default function AllLostItems() {
           <div className="search-box">
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search by item name or place..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="search-icon"></span>
+            <span className="search-icon">🔍</span>
           </div>
           <div className="action-buttons">
             <button className="my-lost-btn" onClick={() => navigate("/my-lost")}>
-              My Lost Items
+              📋 My Lost Items
             </button>
             <button className="add-lost-btn" onClick={() => navigate("/add-lost")}>
-              Report Lost Item
+              + Report Lost Item
             </button>
           </div>
         </div>

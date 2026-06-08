@@ -4,27 +4,6 @@ import api from "../api/axios";
 import "./css/LibrarianHome.css";
 import Navbar from "../components/Navbar";
 
-const SECTION_LABELS = {
-  UPPER_A_SIDE: "A - Upper Tier",
-  A_SIDE: "A - Central Zone",
-  BASE_A_SIDE: "A - Lower Tier",
-  UPPER_B_SIDE: "B - Upper Tier",
-  B_SIDE: "B - Central Zone",
-  BASE_B_SIDE: "B - Lower Tier",
-};
-
-const SECTION_RENDER_ORDER = [
-  "UPPER_A_SIDE",
-  "UPPER_B_SIDE",
-  "A_SIDE",
-  "B_SIDE",
-  "BASE_A_SIDE",
-  "BASE_B_SIDE",
-];
-
-const getSectionLabel = (sectionValue) =>
-  SECTION_LABELS[sectionValue] || String(sectionValue || "").replace(/_/g, " ");
-
 export default function LibrarianHome() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -52,11 +31,7 @@ export default function LibrarianHome() {
         setLoading(false);
       }
     };
-
     fetchData();
-
-    const intervalId = setInterval(fetchData, 10000);
-    return () => clearInterval(intervalId);
   }, []);
 
   const backendBaseUrl = api.defaults.baseURL || "";
@@ -78,13 +53,10 @@ export default function LibrarianHome() {
     acc[section] = (acc[section] || 0) + 1;
     return acc;
   }, {});
-
-  const seatBreakdown = SECTION_RENDER_ORDER
-    .filter((section) => seatsBySection[section])
-    .map((section) => ({
-      section: getSectionLabel(section),
-      count: seatsBySection[section],
-    }));
+  const seatBreakdown = Object.entries(seatsBySection).map(([section, count]) => ({
+    section: section.replace(/_/g, " "),
+    count,
+  }));
 
   const stats = [
     { label: "Total Seats", value: totalSeats, icon: "💺" },
@@ -216,7 +188,7 @@ export default function LibrarianHome() {
                         <div>
                           <h4>Seat {booking.seatNumber}</h4>
                           <p className="booking-section">
-                            {getSectionLabel(booking.section || booking.seatSection)}
+                            {booking.section?.replace(/_/g, " ")}
                           </p>
                         </div>
                       </div>

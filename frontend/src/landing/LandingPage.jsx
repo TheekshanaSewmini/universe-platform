@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import universeLogo from "../assets/universe-logo.png";
-import educationHero from "../assets/education-hero.png";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -29,10 +28,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section
-        className="hero-section"
-        style={{ backgroundImage: `url(${educationHero})` }}
-      >
+      <section className="hero-section">
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <div className="hero-text">
