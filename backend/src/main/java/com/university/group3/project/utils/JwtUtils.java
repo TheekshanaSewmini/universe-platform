@@ -27,7 +27,7 @@ public class JwtUtils {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${cookie.secure:false}")
+    @Value("${cookie.secure:true}")
     private boolean cookieSecure;
 
     @Value("${cookie.same-site:Lax}")

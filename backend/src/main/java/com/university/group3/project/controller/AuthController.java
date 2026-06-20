@@ -29,7 +29,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserRepo userRepo;
 
-    @Value("${cookie.secure:false}")
+    @Value("${cookie.secure:true}")
     private boolean cookieSecure;
 
     @Value("${cookie.same-site:Lax}")

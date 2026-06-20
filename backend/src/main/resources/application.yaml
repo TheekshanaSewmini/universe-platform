@@ -38,7 +38,7 @@ jwt:
   secret: ${JWT_SECRET:}
 
 cookie:
-  secure: ${COOKIE_SECURE:false}
+  secure: ${COOKIE_SECURE:true}
   same-site: ${COOKIE_SAME_SITE:Lax}
 
 app:

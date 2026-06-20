@@ -74,4 +74,5 @@ Default URLs:
 
 - Rotate any database, email, or JWT secrets that were previously committed.
 - Keep `COOKIE_SECURE=true` and `COOKIE_SAME_SITE=None` for HTTPS deployments that need cross-site cookies.
+- Use `COOKIE_SECURE=false` only for local HTTP testing.
 - Keep `CORS_ALLOWED_ORIGINS` limited to trusted frontend origins.

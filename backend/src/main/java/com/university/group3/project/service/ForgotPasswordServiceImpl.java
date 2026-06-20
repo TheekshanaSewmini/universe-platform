@@ -21,14 +21,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
 public class ForgotPasswordServiceImpl implements ForgotPasswordService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final JwtUtils jwtUtils;
     private final UserRepo userRepo;
@@ -36,7 +38,7 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
     private final ForgotPasswordRepository forgotPasswordRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${cookie.secure:false}")
+    @Value("${cookie.secure:true}")
     private boolean cookieSecure;
 
     @Value("${cookie.same-site:Lax}")
@@ -211,7 +213,7 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
     }
 
     private int generateOtp() {
-        return new Random().nextInt(100_000, 999_999);
+        return SECURE_RANDOM.nextInt(900_000) + 100_000;
     }
 
     private void sendOtpEmail(String email, int otp) {
@@ -220,7 +222,7 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
     }
 
     private void sendOtpSms(String phoneNumber, int otp) {
-        System.out.println("Send OTP " + otp + " to phone " + phoneNumber);
+        throw new IllegalStateException("SMS recovery is not configured");
     }
 
     private String getEmailFromCookie(HttpServletRequest request) {

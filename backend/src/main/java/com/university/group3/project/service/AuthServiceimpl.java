@@ -8,25 +8,35 @@ import com.university.group3.project.utils.JwtUtils;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceimpl implements AuthService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
     private final EmailUtils emailUtils;
     private  final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+
+    @Value("${app.frontend-url:http://localhost:5173}")
+    private String frontendUrl;
 
     @Override
     public AuthResponse signUp(UserDto.RegisterRequest registerRequest) {
@@ -78,7 +88,7 @@ public class AuthServiceimpl implements AuthService {
         user.setIsVerified(false);
 
         //  Generate 6-digit verification code
-        int verificationCode = (int) (Math.random() * 900_000) + 100_000;
+        int verificationCode = generateOtp();
         user.setVerifyCode(String.valueOf(verificationCode));
         user.setVerifyCodeExpiry(new Date(System.currentTimeMillis() + 2 * 60 * 1000)); // 2 min expiry
         user.setLastOtpSentAt(new Date());
@@ -88,6 +98,8 @@ public class AuthServiceimpl implements AuthService {
 
         // Prepare verification email
         final String subject = "Verify your account";
+        String verificationUrl = buildVerificationUrl(savedUser);
+
         final String EMAIL_TEMPLATE = """
         <html>
             <body>
@@ -95,18 +107,18 @@ public class AuthServiceimpl implements AuthService {
                 <p>You have successfully registered to our application.</p>
                 <p>Verification code is <b>%s</b>.</p>
                 <p>Please click the link to verify your account:</p>
-                <a href="http://localhost:5173/verify?email=%s&code=%s">Verify Email</a>
+                <a href="%s">Verify Email</a>
                 <p>This link will expire in 2 minutes.</p>
             </body>
         </html>
-        """.formatted(savedUser.getFirstname(), savedUser.getVerifyCode(), savedUser.getEmail(), savedUser.getVerifyCode());
+        """.formatted(savedUser.getFirstname(), savedUser.getVerifyCode(), verificationUrl);
 
         //  Send email
         try {
             MailBody mailBody = new MailBody(savedUser.getEmail(), subject, EMAIL_TEMPLATE);
             emailUtils.sendMail(mailBody);
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.warn("Failed to send verification email", e);
             return AuthResponse.builder()
                     .message("Failed to send verification email!")
                     .success(false)
@@ -166,7 +178,7 @@ public class AuthServiceimpl implements AuthService {
         claims.put("name", user.getFirstname());
         claims.put("email", user.getEmail());
 
-        String accessToken = jwtUtils.generateToken(claims, user, response, Token.ACCESS);
+        jwtUtils.generateToken(claims, user, response, Token.ACCESS);
         String refreshToken = jwtUtils.generateToken(claims, user, response, Token.REFRESH);
 
         // You just set cookies in JwtUtils, but saved refresh token in DB
@@ -177,8 +189,6 @@ public class AuthServiceimpl implements AuthService {
                 .firstname(savedUser.getFirstname())
                 .lastName(savedUser.getLastName())// ✅ safer to use savedUser
                 .email(savedUser.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .isVerified(Boolean.TRUE)
                 .role(savedUser.getRole()) // pass the Set<Role>
 
@@ -293,7 +303,7 @@ public class AuthServiceimpl implements AuthService {
         }
 
         // 5️⃣ Generate new OTP
-        int verificationCode = (int) (Math.random() * 900000) + 100000;
+        int verificationCode = generateOtp();
         user.setVerifyCode(String.valueOf(verificationCode));
         user.setVerifyCodeExpiry(new Date(System.currentTimeMillis() + 2 * 60 * 1000));
         user.setLastOtpSentAt(now);
@@ -320,11 +330,16 @@ public class AuthServiceimpl implements AuthService {
                 .success(true)
                 .build();
     }
+    private int generateOtp() {
+        return SECURE_RANDOM.nextInt(900_000) + 100_000;
+    }
 
-
-
-
-
-
-
+    private String buildVerificationUrl(User savedUser) {
+        return UriComponentsBuilder.fromUriString(frontendUrl.replaceFirst("/+$", ""))
+                .path("/verify")
+                .queryParam("email", savedUser.getEmail())
+                .queryParam("code", savedUser.getVerifyCode())
+                .build()
+                .toUriString();
+    }
 }
