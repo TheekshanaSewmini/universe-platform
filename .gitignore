@@ -1,0 +1,32 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Node / frontend build output
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Java / Maven build output
+target/
+build/
+*.class
+
+# Runtime uploads and logs
+uploads/
+backend/uploads/
+backend/**/uploads/
+logs/
+*.log

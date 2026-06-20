@@ -1,0 +1,117 @@
+package com.university.group3.project.controller;
+
+import com.university.group3.project.dtos.AuthResponse;
+import com.university.group3.project.dtos.LoginRequest;
+import com.university.group3.project.dtos.UserDto;
+import com.university.group3.project.repos.UserRepo;
+import com.university.group3.project.service.AuthService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Duration;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+    private final UserRepo userRepo;
+
+    @Value("${cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${cookie.same-site:Lax}")
+    private String cookieSameSite;
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody UserDto.RegisterRequest registerRequest,
+                                                 HttpServletResponse response) {
+        AuthResponse res = authService.signUp(registerRequest);
+
+        ResponseCookie emailCookie = ResponseCookie.from("userEmail", registerRequest.email())
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite)
+                .path("/")
+                .maxAge(Duration.ofMinutes(30))
+                .build();
+        response.addHeader("Set-Cookie", emailCookie.toString());
+
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest,
+                                              HttpServletResponse response) {
+        return ResponseEntity.ok(authService.SignIn(loginRequest, response));
+    }
+
+    @PostMapping("/verify-code")
+    public ResponseEntity<AuthResponse> verifyCode(@Valid @RequestBody UserDto.VerifyCodeDto verifyCodeDto,
+                                                   HttpServletRequest request) {
+
+        String email = null;
+        if (request.getCookies() != null) {
+            for (Cookie c : request.getCookies()) {
+                if ("userEmail".equals(c.getName())) {
+                    email = c.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (email == null) {
+            return ResponseEntity.badRequest()
+                    .body(AuthResponse.builder()
+                            .message("Email not found. Please start the process again.")
+                            .success(false)
+                            .build());
+        }
+        String verifyCode = verifyCodeDto.verifyCode();
+
+        return ResponseEntity.ok(authService.verifyCode(email, verifyCode));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<AuthResponse> resendOtp(HttpServletRequest request) {
+
+        String email = null;
+        if (request.getCookies() != null) {
+            for (Cookie c : request.getCookies()) {
+                if ("userEmail".equals(c.getName())) {
+                    email = c.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (email == null) {
+            return ResponseEntity.badRequest()
+                    .body(AuthResponse.builder()
+                            .message("Email not found. Please start the process again.")
+                            .success(false)
+                            .build());
+        }
+
+        return ResponseEntity.ok(authService.resendOtp(email));
+    }
+
+    @PostMapping("/check-phone")
+    public ResponseEntity<Map<String, Boolean>> checkPhone(@RequestBody Map<String, String> body) {
+        String phoneNumber = body.get("phoneNumber");
+        boolean available = !userRepo.findByPhoneNumber(phoneNumber).isPresent();
+        return ResponseEntity.ok(Map.of("available", available));
+    }
+}

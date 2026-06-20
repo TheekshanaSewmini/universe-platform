@@ -1,0 +1,219 @@
+
+
+:root {
+  --bg: #fef9f0;
+  --card: #ffffff;
+  --brown: #b97f44;
+  --brown-dark: #9b6a3a;
+  --brown-light: #f5e7d9;
+  --text-dark: #4a3b2c;
+  --text-muted: #7c6b5a;
+  --border: #e8e0d0;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-dark);
+  line-height: 1.5;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.check-availability-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 2rem;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--brown-dark);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+  position: relative;
+  display: inline-block;
+}
+
+.page-header h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--brown);
+  margin: 0.5rem auto 0;
+  border-radius: 2px;
+}
+
+.page-header p {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.check-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.check-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--brown);
+}
+
+.selection-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.control-group label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brown-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-group select,
+.control-group input {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  background: var(--card);
+  transition: var(--transition);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.control-group select:focus,
+.control-group input:focus {
+  outline: none;
+  border-color: var(--brown);
+  box-shadow: 0 0 0 3px rgba(185, 127, 68, 0.1);
+}
+
+.action {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.check-btn {
+  background: var(--brown);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 3rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 6px rgba(185, 127, 68, 0.2);
+}
+
+.check-btn:hover {
+  background: var(--brown-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(185, 127, 68, 0.3);
+}
+
+.check-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--brown-light);
+  border-left: 4px solid var(--brown);
+  animation: fadeIn 0.3s ease;
+}
+
+.result-card.success {
+  background: #e9f5ef;
+  border-left-color: #2e7d32;
+}
+
+.result-card.error {
+  background: #fef1f0;
+  border-left-color: #c62828;
+}
+
+.result-icon {
+  font-size: 1.8rem;
+}
+
+.result-message {
+  font-size: 1rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.result-card.success .result-message {
+  color: #2e7d32;
+}
+
+.result-card.error .result-message {
+  color: #c62828;
+}
+
+
+@media (max-width: 640px) {
+  .check-availability-page {
+    padding: 1rem;
+  }
+  .selection-controls {
+    gap: 1rem;
+  }
+}
